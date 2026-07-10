@@ -7,6 +7,8 @@ final class SubscriptionsViewModel {
     var isLoading = false
     var error: Error?
     var toast: String?
+    var activity: JSONValue?
+    var events: JSONValue?
 
     private let service = SubscriptionService()
 
@@ -40,6 +42,16 @@ final class SubscriptionsViewModel {
 
     func sync(_ source: RssSource) async {
         do { try await service.syncSource(id: source.id); toast = "已触发同步：\(source.name)" }
+        catch { self.error = error }
+    }
+
+    func loadActivity() async {
+        do { activity = try await service.activity() }
+        catch { self.error = error }
+    }
+
+    func loadEvents() async {
+        do { events = try await service.events() }
         catch { self.error = error }
     }
 }

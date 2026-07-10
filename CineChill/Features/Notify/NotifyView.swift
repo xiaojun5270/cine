@@ -6,6 +6,10 @@ final class NotifyViewModel {
     var channels: [NotifyChannel] = []
     var telegramConnected = false
     var wechatEnabled = false
+    var telegramConfig: JSONValue?
+    var wechatConfig: JSONValue?
+    var types: JSONValue?
+    var defaultTemplates: JSONValue?
     var isLoading = false
     var error: Error?
     var toast: String?
@@ -18,9 +22,16 @@ final class NotifyViewModel {
         async let ch = service.channels()
         async let tg = service.telegramStatus()
         async let wc = service.wechatConfig()
+        async let tgConfig = service.telegramConfig()
+        async let types = service.types()
+        async let templates = service.defaultTemplates()
         let channels = try? await ch
         let tgStatus = try? await tg
         let wcConfig = try? await wc
+        telegramConfig = try? await tgConfig
+        self.types = try? await types
+        defaultTemplates = try? await templates
+        wechatConfig = wcConfig
         self.channels = channels ?? []
         telegramConnected = tgStatus?["connected"].bool ?? tgStatus?["logged_in"].bool ?? false
         wechatEnabled = wcConfig?["enabled"].bool ?? false
@@ -64,6 +75,19 @@ struct NotifyView: View {
                             connected: model.wechatEnabled,
                             test: { await model.testWechat() }
                         )
+
+                        if let config = model.telegramConfig {
+                            JSONKeyValueCard(title: "Telegram 配置", json: config, limit: 12)
+                        }
+                        if let config = model.wechatConfig {
+                            JSONKeyValueCard(title: "企业微信配置", json: config, limit: 12)
+                        }
+                        if let types = model.types {
+                            JSONKeyValueCard(title: "通知类型", json: types, limit: 18)
+                        }
+                        if let templates = model.defaultTemplates {
+                            JSONKeyValueCard(title: "默认模板", json: templates, limit: 18)
+                        }
 
                         if !model.channels.isEmpty {
                             SectionHeader(title: "通知渠道")

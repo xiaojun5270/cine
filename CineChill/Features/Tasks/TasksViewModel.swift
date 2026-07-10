@@ -8,6 +8,8 @@ final class TasksViewModel {
     var error: Error?
     var toast: String?
     var runningIDs: Set<String> = []
+    var progress: JSONValue?
+    var logs: JSONValue?
 
     private let service = TaskService()
 
@@ -36,5 +38,41 @@ final class TasksViewModel {
             try await service.toggleTask(id: task.id, enabled: enabled)
             await load()
         } catch { self.error = error; await load() }
+    }
+
+    func delete(_ task: TaskItem) async {
+        do {
+            try await service.deleteTask(id: task.id)
+            toast = "已删除：\(task.name)"
+            await load()
+        } catch { self.error = error }
+    }
+
+    func loadProgress() async {
+        do {
+            progress = try await service.progress()
+        } catch { self.error = error }
+    }
+
+    func loadLogs() async {
+        do {
+            logs = try await service.systemLogs()
+        } catch { self.error = error }
+    }
+
+    func clearProgress() async {
+        do {
+            try await service.clearTaskProgress()
+            progress = .null
+            toast = "已清空任务进度"
+        } catch { self.error = error }
+    }
+
+    func clearLogs() async {
+        do {
+            try await service.clearSystemLogs()
+            logs = .null
+            toast = "已清空系统日志"
+        } catch { self.error = error }
     }
 }

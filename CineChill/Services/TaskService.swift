@@ -35,6 +35,14 @@ struct TaskService {
         _ = try await client.request(.post, "/api/delete_task", body: IDBody(id: id))
     }
 
+    func clearTaskProgress() async throws {
+        _ = try await client.request(.post, "/api/clear_task_progress", body: JSONValue.obj([:]))
+    }
+
+    func clearSystemLogs() async throws {
+        _ = try await client.request(.post, "/api/clear_system_logs")
+    }
+
     func systemLogs(limit: Int = 200) async throws -> JSONValue {
         try await client.request(.get, "/api/system_logs", query: ["limit": String(limit)])
     }

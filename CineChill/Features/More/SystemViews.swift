@@ -67,14 +67,21 @@ struct WebhookView: View {
     @State private var queue: JSONValue?
     @State private var isLoading = true
     @State private var error: Error?
+    @State private var toast: String?
 
     var body: some View {
         ModuleScaffold(title: "Webhook", isLoading: isLoading && config == nil, error: config == nil ? error : nil,
                        onRetry: { Task { await load() } }) {
+            GlassCard {
+                GlassPrimaryButton(title: "发送测试事件", systemImage: "bolt.horizontal.circle") {
+                    Task { await trigger() }
+                }
+            }
             if let config { JSONKeyValueCard(title: "配置", json: config, limit: 16) }
             if let queue { JSONKeyValueCard(title: "队列", json: queue, limit: 12) }
         }
         .task { await load() }
+        .toast($toast)
     }
 
     private func load() async {
@@ -84,6 +91,10 @@ struct WebhookView: View {
         do { config = try await c } catch { self.error = error }
         queue = try? await q
         isLoading = false
+    }
+    private func trigger() async {
+        do { _ = try await service.trigger(); toast = "已发送测试事件"; await load() }
+        catch { toast = error.localizedDescription }
     }
 }
 
@@ -97,7 +108,7 @@ struct TransferView: View {
 
     var body: some View {
         ModuleScaffold(title: "手动转移", isLoading: isLoading && history == nil, error: history == nil ? error : nil,
-                       onRetry: { Task { await load() } }) {
+                       onRetry: { Task { await load() } }, toolbarContent: AnyView(toolbarMenu)) {
             GlassCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("手动添加链接").font(.headline)
@@ -114,6 +125,18 @@ struct TransferView: View {
         .toast($toast)
     }
 
+    private var toolbarMenu: some View {
+        Menu {
+            Button(role: .destructive) {
+                Task { await clearHistory() }
+            } label: {
+                Label("清空转移历史", systemImage: "trash")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+    }
+
     private func load() async {
         isLoading = true; error = nil
         do { history = try await service.history() } catch { self.error = error }
@@ -121,6 +144,10 @@ struct TransferView: View {
     }
     private func submit() async {
         do { _ = try await service.manual(link: link); toast = "已提交"; link = ""; await load() }
+        catch { toast = error.localizedDescription }
+    }
+    private func clearHistory() async {
+        do { try await service.clearHistory(); toast = "已清空转移历史"; await load() }
         catch { toast = error.localizedDescription }
     }
 }

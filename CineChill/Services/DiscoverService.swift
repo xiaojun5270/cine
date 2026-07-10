@@ -18,11 +18,17 @@ struct DiscoverService {
     /// Curated set of home rows using stable, parameter-free endpoints.
     static let homeRows: [Row] = [
         Row(id: "trending", title: "本周趋势", path: "/api/discover/tmdb/trending", defaultType: "movie"),
+        Row(id: "now_playing", title: "TMDB 正在上映", path: "/api/discover/tmdb/now_playing", defaultType: "movie"),
+        Row(id: "popular_movies", title: "TMDB 热门电影", path: "/api/discover/tmdb/popular_movies", defaultType: "movie"),
+        Row(id: "popular_tv", title: "TMDB 热门剧集", path: "/api/discover/tmdb/popular_tv", defaultType: "tv"),
         Row(id: "hot_movies", title: "豆瓣热门电影", path: "/api/discover/douban/hot_movies", defaultType: "movie"),
         Row(id: "hot_tv", title: "豆瓣热门剧集", path: "/api/discover/douban/hot_tv", defaultType: "tv"),
+        Row(id: "new_movies", title: "豆瓣新片", path: "/api/discover/douban/new_movies", defaultType: "movie"),
+        Row(id: "new_tv", title: "豆瓣新剧", path: "/api/discover/douban/new_tv", defaultType: "tv"),
+        Row(id: "chinese_weekly", title: "华语口碑榜", path: "/api/discover/douban/chinese_weekly", defaultType: "movie"),
+        Row(id: "global_weekly", title: "全球口碑榜", path: "/api/discover/douban/global_weekly", defaultType: "movie"),
         Row(id: "showing", title: "正在热映", path: "/api/discover/douban/showing", defaultType: "movie"),
         Row(id: "hot_anime", title: "热门动画", path: "/api/discover/douban/hot_anime", defaultType: "tv"),
-        Row(id: "popular_tv", title: "TMDB 热门剧集", path: "/api/discover/tmdb/popular_tv", defaultType: "tv"),
         Row(id: "top250", title: "豆瓣 Top 250", path: "/api/discover/douban/top250", defaultType: "movie")
     ]
 

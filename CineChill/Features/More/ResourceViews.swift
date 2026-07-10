@@ -58,14 +58,19 @@ struct MoviePilotView: View {
 struct RssView: View {
     private let service = RssService()
     @State private var tasks: [JSONValue] = []
+    @State private var config: JSONValue?
+    @State private var presets: JSONValue?
     @State private var isLoading = true
     @State private var error: Error?
     @State private var toast: String?
+    @State private var showPresets = false
 
     var body: some View {
         ModuleScaffold(title: "RSS 原生源", isLoading: isLoading && tasks.isEmpty, error: tasks.isEmpty ? error : nil,
                        isEmpty: !isLoading && tasks.isEmpty && error == nil, emptyTitle: "暂无 RSS 任务",
-                       emptyIcon: "antenna.radiowaves.left.and.right", onRetry: { Task { await load() } }) {
+                       emptyIcon: "antenna.radiowaves.left.and.right", onRetry: { Task { await load() } },
+                       toolbarContent: AnyView(toolbarMenu)) {
+            if let config { JSONKeyValueCard(title: "全局配置", json: config, limit: 10) }
             ForEach(Array(tasks.enumerated()), id: \.offset) { _, t in
                 let name = t.firstString("name") ?? "RSS 任务"
                 let id = t.firstString("id") ?? ""
@@ -78,6 +83,9 @@ struct RssView: View {
                             Spacer()
                         }
                         HStack(spacing: 8) {
+                            ModuleActionButton(title: "立即运行", systemImage: "play.fill", prominent: true) {
+                                Task { await runNow(id: id) }
+                            }
                             ModuleActionButton(title: enabled ? "禁用" : "启用", systemImage: enabled ? "pause" : "play") {
                                 Task { await toggle(id, !enabled) }
                             }
@@ -91,12 +99,59 @@ struct RssView: View {
         }
         .task { await load() }
         .toast($toast)
+        .sheet(isPresented: $showPresets) {
+            NavigationStack {
+                ScrollView {
+                    if let presets {
+                        JSONKeyValueCard(title: nil, json: presets, limit: 80)
+                            .padding(Theme.screenPadding)
+                    } else {
+                        EmptyStateView(systemImage: "link", title: "暂无预设")
+                    }
+                }
+                .background(Theme.backgroundGradient.ignoresSafeArea())
+                .navigationTitle("链接预设").navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showPresets = false } } }
+            }
+        }
+    }
+
+    private var toolbarMenu: some View {
+        Menu {
+            Button {
+                Task { await runNow(id: nil) }
+            } label: {
+                Label("立即运行全部", systemImage: "play.fill")
+            }
+            Button {
+                Task {
+                    await loadPresets()
+                    showPresets = true
+                }
+            } label: {
+                Label("查看链接预设", systemImage: "link")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
     }
 
     private func load() async {
         isLoading = true; error = nil
-        do { tasks = try await service.tasks() } catch { self.error = error }
+        async let t = service.tasks()
+        async let c = service.config()
+        do { tasks = try await t } catch { self.error = error }
+        config = try? await c
         isLoading = false
+    }
+    private func runNow(id: String?) async {
+        let body: JSONValue = id.map { JSONValue.obj(["id": $0]) } ?? .obj([:])
+        do { try await service.runNow(body); toast = "已触发 RSS 运行" }
+        catch { toast = error.localizedDescription }
+    }
+    private func loadPresets() async {
+        do { presets = try await service.linkPresets() }
+        catch { toast = error.localizedDescription }
     }
     private func toggle(_ id: String, _ en: Bool) async { do { try await service.toggleTask(id: id, enabled: en); await load() } catch { toast = error.localizedDescription } }
     private func del(_ id: String) async { do { try await service.deleteTask(id: id); await load() } catch { toast = error.localizedDescription } }
@@ -145,7 +200,10 @@ struct ForwardView: View {
 struct ResourcesView: View {
     private let service = ResourcesService()
     @State private var suites: JSONValue?
+    @State private var templates: JSONValue?
+    @State private var layouts: JSONValue?
     @State private var fonts: JSONValue?
+    @State private var translations: JSONValue?
     @State private var isLoading = true
     @State private var error: Error?
 
@@ -161,6 +219,9 @@ struct ResourcesView: View {
                 }
             }
             if let fonts { JSONKeyValueCard(title: "字体", json: fonts, limit: 10) }
+            if let templates { JSONKeyValueCard(title: "模板", json: templates, limit: 12) }
+            if let layouts { JSONKeyValueCard(title: "布局", json: layouts, limit: 12) }
+            if let translations { JSONKeyValueCard(title: "翻译", json: translations, limit: 12) }
         }
         .task { await load() }
     }
@@ -169,8 +230,14 @@ struct ResourcesView: View {
         isLoading = true; error = nil
         async let s = service.suites()
         async let f = service.fonts()
+        async let t = service.templates()
+        async let l = service.layouts()
+        async let tr = service.translations()
         do { suites = try await s } catch { self.error = error }
         fonts = try? await f
+        templates = try? await t
+        layouts = try? await l
+        translations = try? await tr
         isLoading = false
     }
 }

@@ -4,6 +4,26 @@ struct SubscriptionsView: View {
     @State private var model = SubscriptionsViewModel()
     @State private var editing: RssSource?
     @State private var showEditor = false
+    @State private var panel: SubscriptionPanel?
+
+    private enum SubscriptionPanel: Identifiable, Equatable {
+        case activity
+        case events
+
+        var id: String {
+            switch self {
+            case .activity: "activity"
+            case .events: "events"
+            }
+        }
+
+        var title: String {
+            switch self {
+            case .activity: "订阅活动"
+            case .events: "订阅事件"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -25,9 +45,31 @@ struct SubscriptionsView: View {
             .navigationTitle("订阅")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        editing = nil; showEditor = true
-                    } label: { Image(systemName: "plus") }
+                    Menu {
+                        Button {
+                            editing = nil; showEditor = true
+                        } label: {
+                            Label("添加订阅源", systemImage: "plus")
+                        }
+                        Button {
+                            Task {
+                                await model.loadActivity()
+                                panel = .activity
+                            }
+                        } label: {
+                            Label("查看活动", systemImage: "clock")
+                        }
+                        Button {
+                            Task {
+                                await model.loadEvents()
+                                panel = .events
+                            }
+                        } label: {
+                            Label("查看事件", systemImage: "list.bullet.rectangle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
                 }
             }
             .refreshable { await model.load() }
@@ -35,6 +77,33 @@ struct SubscriptionsView: View {
             .sheet(isPresented: $showEditor) {
                 RssSourceEditor(source: editing) { payload in
                     await model.save(existing: editing, payload: payload)
+                }
+            }
+            .sheet(item: $panel) { panel in
+                NavigationStack {
+                    ScrollView {
+                        let json = panel == .activity ? model.activity : model.events
+                        if let json {
+                            let items = json.items()
+                            if items.isEmpty {
+                                JSONKeyValueCard(title: nil, json: json, limit: 80)
+                                    .padding(Theme.screenPadding)
+                            } else {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                                        JSONKeyValueCard(title: "#\(index + 1)", json: item, limit: 24)
+                                    }
+                                }
+                                .padding(Theme.screenPadding)
+                            }
+                        } else {
+                            EmptyStateView(systemImage: "tray", title: "暂无内容")
+                        }
+                    }
+                    .background(Theme.backgroundGradient.ignoresSafeArea())
+                    .navigationTitle(panel.title)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { self.panel = nil } } }
                 }
             }
             .alert("提示", isPresented: Binding(

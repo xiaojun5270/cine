@@ -9,6 +9,8 @@ struct EmbyUsersView: View {
     @State private var showCreate = false
     @State private var newName = ""
     @State private var newPassword = ""
+    @State private var detail: JSONValue?
+    @State private var showDetail = false
 
     var body: some View {
         ModuleScaffold(title: "Emby 用户", isLoading: isLoading && users.isEmpty, error: users.isEmpty ? error : nil,
@@ -22,6 +24,7 @@ struct EmbyUsersView: View {
         .task { await load() }
         .toast($toast)
         .sheet(isPresented: $showCreate) { createSheet }
+        .sheet(isPresented: $showDetail) { detailSheet(title: "用户详情", json: detail) }
     }
 
     private func userCard(_ user: JSONValue) -> some View {
@@ -36,7 +39,13 @@ struct EmbyUsersView: View {
                     Spacer()
                     StatusChip(text: disabled ? "已禁用" : "启用中", ok: !disabled)
                 }
-                HStack(spacing: 10) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 74), spacing: 8)], spacing: 8) {
+                    ModuleActionButton(title: "详情", systemImage: "info.circle") {
+                        Task { await showUser(id: id) }
+                    }
+                    ModuleActionButton(title: "绑定", systemImage: "link") {
+                        Task { await bind(id: id) }
+                    }
                     ModuleActionButton(title: disabled ? "启用" : "禁用",
                                        systemImage: disabled ? "checkmark.circle" : "nosign") {
                         Task { await setDisabled(id: id, disabled: !disabled) }
@@ -44,7 +53,6 @@ struct EmbyUsersView: View {
                     ModuleActionButton(title: "删除", systemImage: "trash", role: .destructive) {
                         Task { await delete(id: id) }
                     }
-                    Spacer()
                 }
             }
         }
@@ -90,6 +98,14 @@ struct EmbyUsersView: View {
         do { try await service.delete(userID: id); await load() }
         catch { toast = error.localizedDescription }
     }
+    private func showUser(id: String) async {
+        do { detail = try await service.detail(userID: id); showDetail = true }
+        catch { toast = error.localizedDescription }
+    }
+    private func bind(id: String) async {
+        do { try await service.bind(userID: id); toast = "已绑定用户"; await load() }
+        catch { toast = error.localizedDescription }
+    }
 }
 
 struct EmbyTasksView: View {
@@ -98,6 +114,8 @@ struct EmbyTasksView: View {
     @State private var isLoading = true
     @State private var error: Error?
     @State private var toast: String?
+    @State private var detail: JSONValue?
+    @State private var showDetail = false
 
     var body: some View {
         ModuleScaffold(title: "Emby 任务", isLoading: isLoading && tasks.isEmpty, error: tasks.isEmpty ? error : nil,
@@ -121,6 +139,9 @@ struct EmbyTasksView: View {
                             ModuleActionButton(title: "停止", systemImage: "stop.fill") {
                                 Task { await stop(id: id) }
                             }
+                            ModuleActionButton(title: "触发器", systemImage: "clock.badge") {
+                                Task { await showTriggers(id: id) }
+                            }
                             Spacer()
                         }
                     }
@@ -129,6 +150,7 @@ struct EmbyTasksView: View {
         }
         .task { await load() }
         .toast($toast)
+        .sheet(isPresented: $showDetail) { detailSheet(title: "触发器", json: detail) }
     }
 
     private func load() async {
@@ -141,5 +163,25 @@ struct EmbyTasksView: View {
     }
     private func stop(id: String) async {
         do { try await service.stop(taskID: id); toast = "已停止" } catch { toast = error.localizedDescription }
+    }
+    private func showTriggers(id: String) async {
+        do { detail = try await service.triggers(taskID: id); showDetail = true }
+        catch { toast = error.localizedDescription }
+    }
+}
+
+private func detailSheet(title: String, json: JSONValue?) -> some View {
+    NavigationStack {
+        ScrollView {
+            if let json {
+                JSONKeyValueCard(title: nil, json: json, limit: 80)
+                    .padding(Theme.screenPadding)
+            } else {
+                EmptyStateView(systemImage: "doc.text", title: "暂无内容")
+            }
+        }
+        .background(Theme.backgroundGradient.ignoresSafeArea())
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

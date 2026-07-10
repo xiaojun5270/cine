@@ -46,9 +46,21 @@ struct Config302Service {
         try await client.request(.post, "/api/config_302/test_115", body: JSONValue.obj(["cookie": cookie]))
     }
     func manualSigninAll() async throws { _ = try await client.request(.post, "/api/config_302/manual_signin_all") }
+    func manualCleanup() async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/manual_cleanup", body: JSONValue.obj([:]))
+    }
+    func ensureStandardDirs(localMediaRoot: String, remoteRootName: String = "影视库") async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/ensure_standard_topology_dirs",
+                                 body: JSONValue.obj(["local_media_root": localMediaRoot,
+                                                      "remote_root_name": remoteRootName]))
+    }
     func qrcodeApps() async throws -> JSONValue { try await client.request(.get, "/api/config_302/115_qrcode/apps") }
     func qrcodeStart(app: String) async throws -> JSONValue {
         try await client.request(.post, "/api/config_302/115_qrcode/start", body: JSONValue.obj(["app": app]))
+    }
+    func qrcodeResult(uid: String, app: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/115_qrcode/result",
+                                 body: JSONValue.obj(["uid": uid, "app": app]))
     }
 }
 

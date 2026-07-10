@@ -14,7 +14,21 @@ struct MediaOrganizeService {
             body: JSONValue.obj(["input": input, "folder_name": folderName, "file_name": fileName, "media_type": mediaType]))
     }
     func categoryRules() async throws -> JSONValue { try await client.request(.get, "/api/media_organize/category_rules/get") }
+    func categoryRuleDefaults() async throws -> JSONValue {
+        try await client.request(.get, "/api/media_organize/category_rules/defaults")
+    }
     func refreshEmbyCache() async throws { _ = try await client.request(.post, "/api/media_organize/emby_lib_cache/refresh") }
+    func backfillCollections() async throws -> JSONValue {
+        try await client.request(.post, "/api/media_organize/collections/backfill")
+    }
+    func fixLocaleDefaults() async throws -> JSONValue {
+        try await client.request(.post, "/api/media_organize/emby_libraries/fix_locale_defaults",
+                                 body: JSONValue.obj([:]))
+    }
+    func syncScrapers(enabled: Bool = false) async throws -> JSONValue {
+        try await client.request(.post, "/api/media_organize/emby_libraries/sync_scrapers",
+                                 body: JSONValue.obj(["enabled": enabled, "refresh_cache": true]))
+    }
 }
 
 /// OrganizeHistory group.
@@ -90,6 +104,7 @@ struct UpgradeService {
 /// Webhook group.
 struct WebhookService {
     let client = APIClient.shared
+    func trigger() async throws -> JSONValue { try await client.request(.post, "/api/webhook") }
     func config() async throws -> JSONValue { try await client.request(.get, "/api/webhook/config") }
     func queue() async throws -> JSONValue { try await client.request(.get, "/api/webhook/queue") }
     func saveConfig(enabled: Bool, engine: String?, preset: String?, mode: String?, deleteSync: Bool) async throws {

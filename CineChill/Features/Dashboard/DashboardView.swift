@@ -55,11 +55,20 @@ struct DashboardView: View {
     }
 
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("你好，\(session.username ?? "用户")")
-                .font(.title2.bold())
-            Text(session.server?.displayString ?? "")
-                .font(.footnote).foregroundStyle(.secondary)
+        GlassCard {
+            HStack(spacing: 14) {
+                IconBadge(systemImage: "play.tv.fill", tint: Theme.accent, size: 52, cornerRadius: 16)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("你好，\(session.username ?? "用户")")
+                        .font(.title2.bold())
+                    if let server = session.server?.displayString, !server.isEmpty {
+                        GlassPill(server, systemImage: "server.rack", tint: Theme.accentBlue)
+                            .lineLimit(1)
+                    }
+                }
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.top, 8)
     }
@@ -76,7 +85,7 @@ struct DashboardView: View {
     private func statCard(_ title: String, value: Int?, icon: String, tint: Color) -> some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: icon).font(.title2).foregroundStyle(tint)
+                IconBadge(systemImage: icon, tint: tint, size: 42)
                 Text(value.map(String.init) ?? "—")
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .contentTransition(.numericText())
@@ -142,12 +151,13 @@ struct MetricRing: View {
                 Circle().stroke(.white.opacity(0.10), lineWidth: 8)
                 Circle()
                     .trim(from: 0, to: fraction)
-                    .stroke(tint, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .stroke(Theme.tintGradient(tint), style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Text(percent.map { "\(Int($0 > 1 ? $0 : $0 * 100))%" } ?? "—")
                     .font(.caption.bold())
             }
             .frame(width: 64, height: 64)
+            .shadow(color: tint.opacity(0.25), radius: 8, y: 4)
             Text(title).font(.caption).foregroundStyle(.secondary)
         }
     }

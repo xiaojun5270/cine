@@ -164,11 +164,13 @@ struct ModuleActionButton: View {
             if prominent {
                 Button(role: role, action: action) {
                     Label(title, systemImage: systemImage)
+                        .labelStyle(.titleAndIcon)
                 }
                 .appGlassButtonStyle(prominent: true)
             } else {
                 Button(role: role, action: action) {
                     Label(title, systemImage: systemImage)
+                        .labelStyle(.titleAndIcon)
                 }
                 .appGlassButtonStyle()
             }
@@ -176,6 +178,7 @@ struct ModuleActionButton: View {
         .controlSize(.small)
         .tint(Theme.accent)
         .font(.caption.weight(.semibold))
+        .symbolRenderingMode(.hierarchical)
     }
 }
 
@@ -183,6 +186,7 @@ struct ModuleActionButton: View {
 extension View {
     func appLiquidNavigationChrome() -> some View {
         toolbarBackground(.visible, for: .navigationBar)
+            .tint(Theme.accent)
     }
 
     func toast(_ message: Binding<String?>) -> some View {

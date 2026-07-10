@@ -16,6 +16,11 @@ struct MediaPosterCard: View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
                 PosterTile(url: posterURL, width: width)
+                    .overlay(alignment: .bottom) {
+                        LinearGradient(colors: [.clear, .black.opacity(0.50)],
+                                       startPoint: .center, endPoint: .bottom)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.posterCorner, style: .continuous))
+                    }
                 if let rating = item.ratingText {
                     GlassPill(rating, systemImage: "star.fill", tint: Theme.accentWarm)
                         .padding(6)
@@ -32,5 +37,6 @@ struct MediaPosterCard: View {
             .foregroundStyle(.secondary)
         }
         .frame(width: width)
+        .contentShape(.rect)
     }
 }

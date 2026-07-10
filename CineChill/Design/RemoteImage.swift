@@ -25,13 +25,18 @@ struct RemoteImage: View {
     private func placeholder(icon: String?) -> some View {
         ZStack {
             LinearGradient(
-                colors: [Color.white.opacity(0.08), Color.white.opacity(0.03)],
-                startPoint: .top, endPoint: .bottom
+                colors: [
+                    Theme.accent.opacity(0.14),
+                    Theme.accentBlue.opacity(0.10),
+                    Color.white.opacity(0.035)
+                ],
+                startPoint: .topLeading, endPoint: .bottomTrailing
             )
             if let icon {
                 Image(systemName: icon)
                     .font(.title2)
-                    .foregroundStyle(.secondary)
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(.white.opacity(0.52))
             } else {
                 ProgressView().controlSize(.small)
             }
@@ -50,7 +55,8 @@ struct PosterTile: View {
             .clipShape(RoundedRectangle(cornerRadius: Theme.posterCorner, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.posterCorner, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 0.6)
             )
+            .shadow(color: .black.opacity(0.30), radius: 14, y: 8)
     }
 }

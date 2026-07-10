@@ -8,10 +8,10 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            Tab("首页", systemImage: "square.grid.2x2.fill", value: .dashboard) {
+            Tab("首页", systemImage: "film.stack.fill", value: .dashboard) {
                 DashboardView()
             }
-            Tab("发现", systemImage: "sparkles.tv.fill", value: .discover) {
+            Tab("发现", systemImage: "sparkles.rectangle.stack.fill", value: .discover) {
                 DiscoverView()
             }
             Tab("订阅", systemImage: "dot.radiowaves.up.forward", value: .subscriptions) {
@@ -20,10 +20,11 @@ struct MainTabView: View {
             Tab("任务", systemImage: "checklist", value: .tasks) {
                 TasksView()
             }
-            Tab("更多", systemImage: "square.grid.3x3.fill", value: .more) {
+            Tab("更多", systemImage: "circle.hexagongrid.fill", value: .more) {
                 MoreView()
             }
         }
+        .tint(Theme.accent)
         .tabBarMinimizeBehavior(.onScrollDown)
         .toolbarBackground(.visible, for: .tabBar)
     }

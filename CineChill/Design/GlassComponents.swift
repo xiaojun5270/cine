@@ -26,6 +26,7 @@ struct AppGlassButtonStyle: ButtonStyle {
             .shadow(color: .black.opacity(prominent ? 0.22 : 0.12), radius: 12, y: 6)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
+            .symbolRenderingMode(.hierarchical)
     }
 }
 
@@ -60,7 +61,49 @@ struct GlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(16)
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Theme.cardTint)
+            }
             .appGlassCard(cornerRadius: cornerRadius)
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(Theme.cardStroke, lineWidth: 0.8)
+            }
+            .shadow(color: .black.opacity(0.18), radius: 18, y: 10)
+    }
+}
+
+/// Reusable glassy icon container for feature tiles and dense control surfaces.
+struct IconBadge: View {
+    let systemImage: String
+    var tint: Color = Theme.accent
+    var size: CGFloat = 44
+    var cornerRadius: CGFloat = 13
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(Theme.tintGradient(tint))
+                .overlay(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(.white.opacity(0.20))
+                        .frame(height: size * 0.42)
+                        .mask(
+                            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(.white.opacity(0.24), lineWidth: 0.8)
+                }
+            Image(systemName: systemImage)
+                .font(.system(size: size * 0.44, weight: .semibold))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(.white)
+        }
+        .frame(width: size, height: size)
+        .shadow(color: tint.opacity(0.28), radius: 14, y: 8)
     }
 }
 
@@ -84,7 +127,16 @@ struct GlassPill: View {
         .font(.footnote.weight(.semibold))
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
+        .background {
+            Capsule(style: .continuous)
+                .fill(tint.opacity(0.13))
+        }
         .appGlassCapsule(tint: tint)
+        .overlay {
+            Capsule(style: .continuous)
+                .strokeBorder(tint.opacity(0.22), lineWidth: 0.7)
+        }
+        .symbolRenderingMode(.hierarchical)
     }
 }
 
@@ -98,7 +150,12 @@ struct SectionHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.title3.bold())
+                HStack(spacing: 8) {
+                    Capsule(style: .continuous)
+                        .fill(Theme.accent)
+                        .frame(width: 4, height: 18)
+                    Text(title).font(.title3.bold())
+                }
                 if let subtitle {
                     Text(subtitle).font(.caption).foregroundStyle(.secondary)
                 }

@@ -3,6 +3,8 @@ name: Build unsigned IPA
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "ipa-*"
 
@@ -17,25 +19,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare build log
+        run: : > xcodebuild.log
+
       - name: Select Xcode 26
         run: |
-          set -e
-          mapfile -t xcodes < <(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V)
-          if [ "${#xcodes[@]}" -eq 0 ]; then
-            echo "Xcode 26 is required for native Liquid Glass and iOS 26 SDK."
-            ls -1 /Applications | grep Xcode || true
-            exit 1
-          fi
-          printf 'Available Xcode 26 installations:\n'
-          printf '%s\n' "${xcodes[@]}"
-          selected="${xcodes[$((${#xcodes[@]} - 1))]}"
-          echo "Selecting ${selected}"
-          sudo xcode-select -s "${selected}"
+          {
+            set -e
+            mapfile -t xcodes < <(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V)
+            if [ "${#xcodes[@]}" -eq 0 ]; then
+              echo "Xcode 26 is required for native Liquid Glass and iOS 26 SDK."
+              ls -1 /Applications | grep Xcode || true
+              exit 1
+            fi
+            printf 'Available Xcode 26 installations:\n'
+            printf '%s\n' "${xcodes[@]}"
+            selected="${xcodes[$((${#xcodes[@]} - 1))]}"
+            echo "Selecting ${selected}"
+            sudo xcode-select -s "${selected}"
+          } 2>&1 | tee -a xcodebuild.log
+          exit "${PIPESTATUS[0]}"
 
       - name: Show Xcode version
         run: |
-          xcodebuild -version
-          xcodebuild -list -project CineChill.xcodeproj
+          {
+            xcodebuild -version
+            xcodebuild -list -project CineChill.xcodeproj
+          } 2>&1 | tee -a xcodebuild.log
 
       - name: Build unsigned IPA
         id: build

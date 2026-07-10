@@ -20,15 +20,17 @@ jobs:
       - name: Select Xcode 26
         run: |
           set -e
-          if [ -d /Applications/Xcode_26.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.app
-          elif [ -d /Applications/Xcode_26.0.app ]; then
-            sudo xcode-select -s /Applications/Xcode_26.0.app
-          else
+          mapfile -t xcodes < <(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V)
+          if [ "${#xcodes[@]}" -eq 0 ]; then
             echo "Xcode 26 is required for native Liquid Glass and iOS 26 SDK."
             ls -1 /Applications | grep Xcode || true
             exit 1
           fi
+          printf 'Available Xcode 26 installations:\n'
+          printf '%s\n' "${xcodes[@]}"
+          selected="${xcodes[$((${#xcodes[@]} - 1))]}"
+          echo "Selecting ${selected}"
+          sudo xcode-select -s "${selected}"
 
       - name: Show Xcode version
         run: |

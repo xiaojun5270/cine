@@ -9,23 +9,56 @@ struct DockerService {
     func images() async throws -> [JSONValue] { try await client.request(.get, "/api/docker/images").items() }
 
     /// action: "start" | "stop" | "restart" | "remove" | "recreate" ...
-    func containerAction(id: String, action: String, force: Bool = false, image: String? = nil) async throws {
-        _ = try await client.request(.post, "/api/docker/containers/\(id)/action",
+    @discardableResult
+    func containerAction(id: String, action: String, force: Bool = false, image: String? = nil) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/action",
             body: JSONValue.obj(["action": action, "force": force, "image": image]))
     }
     func logs(id: String, tail: Int = 200) async throws -> JSONValue {
         try await client.request(.get, "/api/docker/containers/\(id)/logs", query: ["tail": String(tail)])
     }
-    func setAutoUpdate(id: String, enabled: Bool, image: String?) async throws {
-        _ = try await client.request(.post, "/api/docker/containers/\(id)/auto_update",
+    @discardableResult
+    func setAutoUpdate(id: String, enabled: Bool, image: String?) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/auto_update",
             body: JSONValue.obj(["enabled": enabled, "image": image]))
+    }
+    func setAutoRestart(id: String, enabled: Bool, mode: String, time: String, memoryLimitMB: Double, memoryDurationMinutes: Int) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/auto_restart",
+            body: JSONValue.obj(["enabled": enabled, "mode": mode, "time": time,
+                                 "memory_limit_mb": memoryLimitMB,
+                                 "memory_duration_minutes": memoryDurationMinutes]))
+    }
+    func setScheduledRestart(id: String, enabled: Bool, mode: String, time: String, memoryLimitMB: Double, memoryDurationMinutes: Int) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/scheduled_restart",
+            body: JSONValue.obj(["enabled": enabled, "mode": mode, "time": time,
+                                 "memory_limit_mb": memoryLimitMB,
+                                 "memory_duration_minutes": memoryDurationMinutes]))
+    }
+    func setIgnoreUpdate(id: String, ignored: Bool) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/ignore_update",
+            body: JSONValue.obj(["ignored": ignored]))
+    }
+    func setComposeImage(id: String, image: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/containers/\(id)/compose_image",
+            body: JSONValue.obj(["image": image]))
     }
     func checkUpdates(images: [String]) async throws -> JSONValue {
         try await client.request(.post, "/api/docker/containers/check_updates",
             body: JSONValue.obj(["images": images]))
     }
-    func pullImage(_ image: String) async throws {
-        _ = try await client.request(.post, "/api/docker/images/pull", body: JSONValue.obj(["image": image]))
+    func pullImage(_ image: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/images/pull", body: JSONValue.obj(["image": image]))
+    }
+    func resolveIcon(url: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/docker/icons/resolve", body: JSONValue.obj(["url": url]))
+    }
+    func registryAuth() async throws -> JSONValue { try await client.request(.get, "/api/docker/registry_auth") }
+    func saveRegistryAuth(username: String, token: String) async throws -> JSONValue {
+        try await client.request(.put, "/api/docker/registry_auth", body: JSONValue.obj(["username": username, "token": token]))
+    }
+    func deleteRegistryAuth() async throws -> JSONValue { try await client.request(.delete, "/api/docker/registry_auth") }
+    func updateTask(runID: String) async throws -> JSONValue {
+        try await client.request(.get, "/api/docker/update_tasks/\(runID)")
     }
     func pruneUnused() async throws { _ = try await client.request(.post, "/api/docker/images/prune_unused") }
     func pruneUntagged() async throws { _ = try await client.request(.post, "/api/docker/images/prune_untagged") }

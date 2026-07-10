@@ -108,6 +108,7 @@ struct ForwardService {
 struct AIResolverService {
     let client = APIClient.shared
     func config() async throws -> JSONValue { try await client.request(.get, "/api/ai-episode-resolver/config") }
+    func context() async throws -> JSONValue { try await client.request(.get, "/api/ai-episode-resolver/context") }
     func runtime() async throws -> JSONValue { try await client.request(.get, "/api/ai-episode-resolver/runtime") }
     func audit(limit: Int = 50) async throws -> JSONValue {
         try await client.request(.get, "/api/ai-episode-resolver/audit", query: ["limit": String(limit)])
@@ -116,8 +117,36 @@ struct AIResolverService {
         try await client.request(.get, "/api/ai-episode-resolver/reminders", query: ["status": status, "limit": String(limit)])
     }
     func memory() async throws -> JSONValue { try await client.request(.get, "/api/ai-episode-resolver/memory") }
-    func saveConfig(_ body: JSONValue) async throws {
-        _ = try await client.request(.post, "/api/ai-episode-resolver/config", body: body)
+    func memoryProfile() async throws -> JSONValue { try await client.request(.get, "/api/ai-episode-resolver/memory/profile") }
+    func saveConfig(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/config", body: body)
+    }
+    func saveMemoryProfile(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/memory/profile", body: body)
+    }
+    func models(_ body: JSONValue = .obj([:])) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/models", body: body)
+    }
+    func test(_ body: JSONValue = .obj([:])) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/test", body: body)
+    }
+    func toolPermissions() async throws -> JSONValue {
+        try await client.request(.get, "/api/ai-episode-resolver/tool-permissions")
+    }
+    func saveToolPermissions(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/tool-permissions", body: body)
+    }
+    func createReminder(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/reminders", body: body)
+    }
+    func updateReminder(id: String, _ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/reminders/\(id)", body: body)
+    }
+    func cancelReminder(id: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/ai-episode-resolver/reminders/\(id)/cancel")
+    }
+    func deleteReminder(id: String) async throws -> JSONValue {
+        try await client.request(.delete, "/api/ai-episode-resolver/reminders/\(id)")
     }
 }
 
@@ -159,11 +188,26 @@ struct RssService {
     func config() async throws -> JSONValue { try await client.request(.get, "/api/rss/config") }
     func tasks() async throws -> [JSONValue] { try await client.request(.get, "/api/rss/tasks").items() }
     func linkPresets() async throws -> JSONValue { try await client.request(.get, "/api/rss/link_presets") }
+    func saveConfig(sourceRoot: String, linkRoot: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/rss/save_config",
+                                 body: JSONValue.obj(["source_root": sourceRoot, "link_root": linkRoot]))
+    }
+    func createTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/rss/create_task", body: body)
+    }
+    func updateTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/rss/update_task", body: body)
+    }
+    func buildURL(presetID: String, params: JSONValue, proxy: Bool = true) async throws -> JSONValue {
+        try await client.request(.post, "/api/rss/build_url",
+                                 body: JSONValue.obj(["preset_id": presetID, "params": params, "proxy": proxy]))
+    }
     func toggleTask(id: String, enabled: Bool) async throws {
         _ = try await client.request(.post, "/api/rss/toggle_task", body: JSONValue.obj(["id": id, "enabled": enabled]))
     }
-    func runNow(_ body: JSONValue = .obj([:])) async throws {
-        _ = try await client.request(.post, "/api/rss/run_now", body: body)
+    @discardableResult
+    func runNow(_ body: JSONValue = .obj([:])) async throws -> JSONValue {
+        try await client.request(.post, "/api/rss/run_now", body: body)
     }
     func deleteTask(id: String) async throws {
         _ = try await client.request(.post, "/api/rss/delete_task", body: JSONValue.obj(["id": id]))
@@ -171,5 +215,8 @@ struct RssService {
     func preview(rssURL: String, contentType: String?, limit: Int = 20) async throws -> JSONValue {
         try await client.request(.post, "/api/rss/preview",
             body: JSONValue.obj(["rss_url": rssURL, "content_type": contentType, "limit": limit]))
+    }
+    func native(_ path: String, query: [String: String?] = [:]) async throws -> JSONValue {
+        try await client.request(.get, path, query: query)
     }
 }

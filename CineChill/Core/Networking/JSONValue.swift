@@ -258,17 +258,43 @@ extension JSONValue {
     /// Best-effort conversion from a loosely-typed Swift value, used to build
     /// request bodies ergonomically: `JSONValue.obj(["cid": cid, "enabled": true])`.
     init(any value: Any?) {
+        guard let value else {
+            self = .null
+            return
+        }
+        let mirror = Mirror(reflecting: value)
+        if mirror.displayStyle == .optional {
+            if let child = mirror.children.first {
+                self = JSONValue(any: child.value)
+            } else {
+                self = .null
+            }
+            return
+        }
+
         switch value {
-        case .none: self = .null
         case let v as JSONValue: self = v
         case let v as String: self = .string(v)
         case let v as Bool: self = .bool(v)
         case let v as Int: self = .number(Double(v))
         case let v as Double: self = .number(v)
+        case let v as Float: self = .number(Double(v))
+        case let v as [JSONValue]: self = .array(v)
+        case let v as [String]: self = .array(v.map { .string($0) })
+        case let v as [Int]: self = .array(v.map { .number(Double($0)) })
+        case let v as [Double]: self = .array(v.map { .number($0) })
+        case let v as [Bool]: self = .array(v.map { .bool($0) })
         case let v as [Any?]: self = .array(v.map { JSONValue(any: $0) })
+        case let v as [Any]: self = .array(v.map { JSONValue(any: $0) })
+        case let v as [String: JSONValue]: self = .object(v)
+        case let v as [String: String]: self = .object(v.mapValues { .string($0) })
+        case let v as [String: Int]: self = .object(v.mapValues { .number(Double($0)) })
+        case let v as [String: Double]: self = .object(v.mapValues { .number($0) })
+        case let v as [String: Bool]: self = .object(v.mapValues { .bool($0) })
         case let v as [String: Any?]: self = .object(v.mapValues { JSONValue(any: $0) })
+        case let v as [String: Any]: self = .object(v.mapValues { JSONValue(any: $0) })
         default:
-            if case Optional<Any>.none = value { self = .null } else { self = .null }
+            self = .null
         }
     }
 
@@ -277,10 +303,21 @@ extension JSONValue {
         .object(dict.mapValues { JSONValue(any: $0) })
     }
 
+    func prettyJSONString() -> String {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+            let data = try encoder.encode(self)
+            return String(data: data, encoding: .utf8) ?? (string ?? "")
+        } catch {
+            return string ?? ""
+        }
+    }
+
     /// Extracts an array of items from common container shapes.
     func items(_ extraKeys: String...) -> [JSONValue] {
         if let a = array { return a }
-        for k in ["items", "results", "data", "list", "tasks", "records", "containers", "users"] + extraKeys {
+        for k in ["items", "results", "data", "list", "tasks", "records", "containers", "images", "users", "entries", "sources", "presets", "reminders", "audit", "history"] + extraKeys {
             if let a = self[k].array { return a }
         }
         if let a = self["data"]["items"].array { return a }

@@ -210,7 +210,28 @@ struct RssView: View {
     @State private var isLoading = true
     @State private var error: Error?
     @State private var toast: String?
-    @State private var showPresets = false
+    @State private var result: JSONValue?
+    @State private var resultTitle = "结果"
+    @State private var showResult = false
+    @State private var rssURL = ""
+    @State private var contentType = "movies"
+    @State private var previewLimit = "10"
+    @State private var taskID = ""
+    @State private var taskName = ""
+    @State private var taskCron = "0 */6 * * *"
+    @State private var targetServerIndex = "0"
+    @State private var taskEnabled = true
+    @State private var syncMissingToMP = false
+    @State private var rawTaskBody = ""
+    @State private var sourceRoot = ""
+    @State private var linkRoot = ""
+    @State private var presetID = ""
+    @State private var buildParamsBody = "{}"
+    @State private var buildProxy = true
+    @State private var nativePath = "/api/rss/native/tmdb/trending"
+    @State private var nativeQueryBody = "{\"media_type\":\"movie\",\"time_window\":\"week\",\"language\":\"zh-CN\",\"page_limit\":1,\"max_items\":50}"
+
+    private let buttonColumns = [GridItem(.adaptive(minimum: 92), spacing: 8)]
 
     var body: some View {
         ModuleScaffold(title: "RSS 原生源", isLoading: isLoading && tasks.isEmpty, error: tasks.isEmpty ? error : nil,
@@ -218,48 +239,202 @@ struct RssView: View {
                        emptyIcon: "antenna.radiowaves.left.and.right", onRetry: { Task { await load() } },
                        toolbarContent: AnyView(toolbarMenu)) {
             if let config { JSONKeyValueCard(title: "全局配置", json: config, limit: 10) }
-            ForEach(Array(tasks.enumerated()), id: \.offset) { _, t in
-                let name = t.firstString("name") ?? "RSS 任务"
-                let id = t.firstString("id") ?? ""
-                let enabled = t["enabled"].bool ?? true
-                GlassCard {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Circle().fill(enabled ? .green : .gray).frame(width: 8, height: 8)
-                            Text(name).font(.subheadline.weight(.medium)).lineLimit(1)
-                            Spacer()
-                        }
-                        HStack(spacing: 8) {
-                            ModuleActionButton(title: "立即运行", systemImage: "play.fill", prominent: true) {
-                                Task { await runNow(id: id) }
-                            }
-                            ModuleActionButton(title: enabled ? "禁用" : "启用", systemImage: enabled ? "pause" : "play") {
-                                Task { await toggle(id, !enabled) }
-                            }
-                            ModuleActionButton(title: "删除", systemImage: "trash", role: .destructive) {
-                                Task { await del(id) }
-                            }
-                        }
+            rssTaskEditorCard
+            rssConfigCard
+            nativeSourceCard
+            taskList
+        }
+        .task { await load() }
+        .toast($toast)
+        .sheet(isPresented: $showResult) { JSONResultSheet(title: resultTitle, json: result) }
+    }
+
+    private var rssTaskEditorCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("RSS 预览与任务").font(.headline)
+                TextField("RSS URL", text: $rssURL, axis: .vertical)
+                    .lineLimit(1...4)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                Picker("内容类型", selection: $contentType) {
+                    Text("电影").tag("movies")
+                    Text("剧集").tag("series")
+                    Text("混合").tag("mixed")
+                }
+                .pickerStyle(.segmented)
+                HStack(spacing: 10) {
+                    TextField("任务名", text: $taskName)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("Cron", text: $taskCron)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                }
+                .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                HStack(spacing: 10) {
+                    TextField("任务 ID（更新可选）", text: $taskID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("预览数量", text: $previewLimit)
+                        .keyboardType(.numberPad)
+                }
+                .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                Toggle("启用任务", isOn: $taskEnabled)
+                Toggle("缺失同步到 MoviePilot", isOn: $syncMissingToMP)
+                TextField("完整任务 JSON（可选）", text: $rawTaskBody, axis: .vertical)
+                    .lineLimit(2...8)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "预览", systemImage: "eye", prominent: true) {
+                        Task { await preview() }
+                    }
+                    ModuleActionButton(title: "创建", systemImage: "plus.circle") {
+                        Task { await createTask() }
+                    }
+                    ModuleActionButton(title: "更新", systemImage: "square.and.pencil") {
+                        Task { await updateTask() }
+                    }
+                    ModuleActionButton(title: "任务模板", systemImage: "doc.badge.plus") {
+                        seedTaskBody()
                     }
                 }
             }
         }
-        .task { await load() }
-        .toast($toast)
-        .sheet(isPresented: $showPresets) {
-            NavigationStack {
-                ScrollView {
-                    if let presets {
-                        JSONKeyValueCard(title: nil, json: presets, limit: 80)
-                            .padding(Theme.screenPadding)
-                    } else {
-                        EmptyStateView(systemImage: "link", title: "暂无预设")
+    }
+
+    private var rssConfigCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("全局配置与链接预设").font(.headline)
+                HStack(spacing: 10) {
+                    TextField("source_root", text: $sourceRoot)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("link_root", text: $linkRoot)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                }
+                .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("preset_id", text: $presetID)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("构建 URL 参数 JSON", text: $buildParamsBody, axis: .vertical)
+                    .lineLimit(2...6)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                Toggle("代理生成链接", isOn: $buildProxy)
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "保存配置", systemImage: "square.and.arrow.down", prominent: true) {
+                        Task { await saveConfig() }
+                    }
+                    ModuleActionButton(title: "链接预设", systemImage: "link") {
+                        Task { await loadPresets(show: true) }
+                    }
+                    ModuleActionButton(title: "构建 URL", systemImage: "wand.and.stars") {
+                        Task { await buildURL() }
+                    }
+                    ModuleActionButton(title: "填入配置", systemImage: "doc.badge.gearshape") {
+                        seedConfigFields()
                     }
                 }
-                .background(Theme.backgroundGradient.ignoresSafeArea())
-                .navigationTitle("链接预设").navigationBarTitleDisplayMode(.inline)
-                .appLiquidNavigationChrome()
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showPresets = false } } }
+            }
+        }
+    }
+
+    private var nativeSourceCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("原生源").font(.headline)
+                TextField("原生源路径", text: $nativePath)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("查询参数 JSON", text: $nativeQueryBody, axis: .vertical)
+                    .lineLimit(2...8)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    nativePresetButtons
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var nativePresetButtons: some View {
+        Group {
+            ModuleActionButton(title: "读取", systemImage: "antenna.radiowaves.left.and.right", prominent: true) {
+                Task { await nativeFeed(title: "原生源") }
+            }
+            ModuleActionButton(title: "TMDB趋势", systemImage: "chart.line.uptrend.xyaxis") {
+                Task { await runNativePreset("TMDB 趋势", path: "/api/rss/native/tmdb/trending", query: "{\"media_type\":\"movie\",\"time_window\":\"week\",\"language\":\"zh-CN\",\"page_limit\":1,\"max_items\":50}") }
+            }
+            ModuleActionButton(title: "TMDB发现", systemImage: "sparkle.magnifyingglass") {
+                Task { await runNativePreset("TMDB 发现", path: "/api/rss/native/tmdb/discover", query: "{\"media_type\":\"movie\",\"watch_region\":\"US\",\"sort_by\":\"popularity.desc\",\"language\":\"zh-CN\",\"page_limit\":1,\"max_items\":50}") }
+            }
+            ModuleActionButton(title: "豆瓣分类", systemImage: "star.circle") {
+                Task { await runNativePreset("豆瓣分类", path: "/api/rss/native/douban/classification", query: "{\"sort\":\"U\",\"score\":0,\"tags\":\"\",\"page_limit\":1}") }
+            }
+            ModuleActionButton(title: "豆瓣上映", systemImage: "calendar") {
+                Task { await runNativePreset("豆瓣即将上映", path: "/api/rss/native/douban/coming", query: "{}") }
+            }
+            ModuleActionButton(title: "豆瓣推荐", systemImage: "hand.thumbsup") {
+                Task { await runNativePreset("豆瓣推荐", path: "/api/rss/native/douban/recommended", query: "{\"subject_type\":\"movie\",\"score\":0,\"playable\":0}") }
+            }
+        }
+        Group {
+            ModuleActionButton(title: "豆瓣片单", systemImage: "list.bullet.rectangle") {
+                Task { await runNativePreset("豆瓣片单", path: "/api/rss/native/douban/list", query: "{\"collection_id\":\"movie_showing\",\"media_type\":\"movie\",\"score\":0,\"playable\":0,\"page_limit\":1}") }
+            }
+            ModuleActionButton(title: "爱奇艺榜", systemImage: "chart.bar") {
+                Task { await runNativePreset("爱奇艺榜单", path: "/api/rss/native/iqiyi/rank", query: "{\"category\":\"movie\",\"rank\":\"hot\",\"page_limit\":1}") }
+            }
+            ModuleActionButton(title: "猫眼电影", systemImage: "ticket") {
+                Task { await runNativePreset("猫眼电影", path: "/api/rss/native/maoyan/movie", query: "{\"kind\":\"hot\"}") }
+            }
+            ModuleActionButton(title: "猫眼平台", systemImage: "tv") {
+                Task { await runNativePreset("猫眼平台", path: "/api/rss/native/maoyan/platform", query: "{\"platform\":\"tencent\",\"rank\":\"series\",\"page_limit\":1}") }
+            }
+            ModuleActionButton(title: "国内平台", systemImage: "play.tv") {
+                Task { await runNativePreset("国内平台", path: "/api/rss/native/domestic/tencent", query: "{\"mtype\":\"movie\",\"page_limit\":1}") }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var taskList: some View {
+        ForEach(Array(tasks.enumerated()), id: \.offset) { _, t in
+            rssTaskCard(t)
+        }
+    }
+
+    private func rssTaskCard(_ task: JSONValue) -> some View {
+        let name = task.firstString("name") ?? "RSS 任务"
+        let id = task.firstString("id") ?? ""
+        let enabled = task["enabled"].bool ?? true
+        return GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Circle().fill(enabled ? .green : .gray).frame(width: 8, height: 8)
+                    Text(name).font(.subheadline.weight(.medium)).lineLimit(1)
+                    Spacer()
+                }
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "立即运行", systemImage: "play.fill", prominent: true) {
+                        Task { await runNow(id: id) }
+                    }
+                    ModuleActionButton(title: "填入", systemImage: "square.and.pencil") {
+                        fillTask(task)
+                    }
+                    ModuleActionButton(title: "预览", systemImage: "eye") {
+                        Task {
+                            fillTask(task)
+                            await preview()
+                        }
+                    }
+                    ModuleActionButton(title: enabled ? "禁用" : "启用", systemImage: enabled ? "pause" : "play") {
+                        Task { await toggle(id, !enabled) }
+                    }
+                    ModuleActionButton(title: "删除", systemImage: "trash", role: .destructive) {
+                        Task { await del(id) }
+                    }
+                }
             }
         }
     }
@@ -272,12 +447,19 @@ struct RssView: View {
                 Label("立即运行全部", systemImage: "play.fill")
             }
             Button {
-                Task {
-                    await loadPresets()
-                    showPresets = true
-                }
+                Task { await loadPresets(show: true) }
             } label: {
                 Label("查看链接预设", systemImage: "link")
+            }
+            Button {
+                Task { await nativeFeed(title: "原生源") }
+            } label: {
+                Label("读取原生源", systemImage: "antenna.radiowaves.left.and.right")
+            }
+            Button {
+                Task { await load() }
+            } label: {
+                Label("刷新", systemImage: "arrow.clockwise")
             }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -294,15 +476,153 @@ struct RssView: View {
     }
     private func runNow(id: String?) async {
         let body: JSONValue = id.map { JSONValue.obj(["id": $0]) } ?? .obj([:])
-        do { try await service.runNow(body); toast = "已触发 RSS 运行" }
+        do {
+            show("RSS 运行", try await service.runNow(body))
+            await load()
+        }
         catch { toast = error.localizedDescription }
     }
-    private func loadPresets() async {
-        do { presets = try await service.linkPresets() }
+    private func loadPresets(show: Bool = false) async {
+        do {
+            presets = try await service.linkPresets()
+            if show { self.show("链接预设", presets) }
+        }
         catch { toast = error.localizedDescription }
     }
     private func toggle(_ id: String, _ en: Bool) async { do { try await service.toggleTask(id: id, enabled: en); await load() } catch { toast = error.localizedDescription } }
     private func del(_ id: String) async { do { try await service.deleteTask(id: id); await load() } catch { toast = error.localizedDescription } }
+
+    private func preview() async {
+        do {
+            guard !rssURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写 RSS URL"])
+            }
+            show("RSS 预览", try await service.preview(rssURL: rssURL, contentType: contentType, limit: Int(previewLimit) ?? 10))
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func createTask() async {
+        do {
+            show("创建任务", try await service.createTask(try taskBody(requireID: false)))
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func updateTask() async {
+        do {
+            show("更新任务", try await service.updateTask(try taskBody(requireID: true)))
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func saveConfig() async {
+        do {
+            guard !sourceRoot.isEmpty, !linkRoot.isEmpty else {
+                throw APIError.validation(["请填写 source_root 和 link_root"])
+            }
+            show("RSS 配置保存", try await service.saveConfig(sourceRoot: sourceRoot, linkRoot: linkRoot))
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func buildURL() async {
+        do {
+            guard !presetID.isEmpty else { throw APIError.validation(["请填写 preset_id"]) }
+            show("构建 URL", try await service.buildURL(presetID: presetID, params: try decodeJSONOrEmpty(buildParamsBody), proxy: buildProxy))
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func nativeFeed(title: String) async {
+        do {
+            show(title, try await service.native(nativePath, query: try queryFromJSON(nativeQueryBody)))
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func runNativePreset(_ title: String, path: String, query: String) async {
+        nativePath = path
+        nativeQueryBody = query
+        await nativeFeed(title: title)
+    }
+
+    private func seedConfigFields() {
+        sourceRoot = config?.firstString("source_root", "sourceRoot") ?? sourceRoot
+        linkRoot = config?.firstString("link_root", "linkRoot") ?? linkRoot
+    }
+
+    private func seedTaskBody() {
+        rawTaskBody = taskDraft().prettyJSONString()
+        resultTitle = "任务 JSON"
+        result = .string(rawTaskBody)
+        showResult = true
+    }
+
+    private func fillTask(_ json: JSONValue) {
+        taskID = json.firstString("id") ?? taskID
+        taskName = json.firstString("name", "title") ?? taskName
+        rssURL = json.firstString("rss_url", "rssURL", "url") ?? rssURL
+        taskCron = json.firstString("cron") ?? taskCron
+        contentType = json.firstString("content_type", "contentType") ?? contentType
+        targetServerIndex = json["target_server_idx"].string ?? targetServerIndex
+        taskEnabled = json["enabled"].bool ?? taskEnabled
+        syncMissingToMP = json["sync_library_missing_to_mp"].bool ?? syncMissingToMP
+        rawTaskBody = json.prettyJSONString()
+    }
+
+    private func taskBody(requireID: Bool) throws -> JSONValue {
+        if !rawTaskBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let body = try decodeJSON(rawTaskBody)
+            if requireID, body["id"].string == nil, taskID.isEmpty {
+                throw APIError.validation(["更新任务需要 id"])
+            }
+            return body
+        }
+        if requireID, taskID.isEmpty { throw APIError.validation(["更新任务需要 id"]) }
+        guard !taskName.isEmpty else { throw APIError.validation(["请填写任务名"]) }
+        guard !rssURL.isEmpty else { throw APIError.validation(["请填写 RSS URL"]) }
+        guard !taskCron.isEmpty else { throw APIError.validation(["请填写 Cron"]) }
+        return taskDraft()
+    }
+
+    private func taskDraft() -> JSONValue {
+        JSONValue.obj([
+            "id": taskID.isEmpty ? nil : taskID,
+            "name": taskName,
+            "rss_url": rssURL,
+            "cron": taskCron,
+            "target_server_idx": Int(targetServerIndex) ?? 0,
+            "content_type": contentType,
+            "sync_library_missing_to_mp": syncMissingToMP,
+            "enabled": taskEnabled
+        ])
+    }
+
+    private func show(_ title: String, _ json: JSONValue?) {
+        resultTitle = title
+        result = json
+        showResult = true
+    }
+
+    private func queryFromJSON(_ text: String) throws -> [String: String?] {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [:] }
+        guard let object = try decodeJSON(text).object else { throw APIError.validation(["查询参数必须是 JSON 对象"]) }
+        return object.mapValues { value in
+            switch value {
+            case .null: return nil
+            case .string(let string): return string
+            case .number, .bool: return value.string
+            case .array, .object: return value.prettyJSONString()
+            }
+        }
+    }
+
+    private func decodeJSONOrEmpty(_ text: String) throws -> JSONValue {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .obj([:]) : try decodeJSON(text)
+    }
+
+    private func decodeJSON(_ text: String) throws -> JSONValue {
+        guard let data = text.data(using: .utf8) else { throw APIError.decoding("JSON 不是 UTF-8 文本") }
+        return try JSONDecoder().decode(JSONValue.self, from: data)
+    }
 }
 
 struct ForwardView: View {

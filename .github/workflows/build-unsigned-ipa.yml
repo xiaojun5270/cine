@@ -20,9 +20,33 @@ jobs:
           xcodebuild -list -project CineChill.xcodeproj
 
       - name: Build unsigned IPA
+        id: build
+        continue-on-error: true
         run: |
           chmod +x scripts/package-unsigned-ipa.sh
-          scripts/package-unsigned-ipa.sh
+          set -o pipefail
+          scripts/package-unsigned-ipa.sh 2>&1 | tee xcodebuild.log
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize build failure
+        if: steps.build.outputs.exit_code != '0'
+        run: |
+          {
+            echo "### xcodebuild failed"
+            echo
+            echo '```text'
+            tail -n 220 xcodebuild.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "${{ steps.build.outputs.exit_code }}"
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
+          if-no-files-found: ignore
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4

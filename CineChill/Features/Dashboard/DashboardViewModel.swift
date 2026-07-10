@@ -13,6 +13,12 @@ final class DashboardViewModel {
         JSONValue.obj([
             "dashboard_stats": stats?.raw,
             "dashboard_device_metrics": metrics?.raw,
+            "resolved_stats": JSONValue.obj([
+                "movies": stats?.movieCount,
+                "tv": stats?.tvCount,
+                "episodes": stats?.episodeCount,
+                "subscriptions": stats?.subscriptionCount
+            ]),
             "today_picks_count": todayPicks.count
         ])
     }

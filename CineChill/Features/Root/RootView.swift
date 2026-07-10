@@ -18,6 +18,7 @@ struct RootView: View {
             case .authenticated:
                 MainTabView()
                     .transition(.opacity)
+                    .task { await session.validateStoredLogin() }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: session.phase)

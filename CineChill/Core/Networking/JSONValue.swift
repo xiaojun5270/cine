@@ -181,6 +181,8 @@ enum JSONValue: Codable, Hashable, Sendable {
                 if let number = value.firstNumber(matching: wanted) { return number }
             }
             return nil
+        case .string(let string):
+            return Self.parsedJSONString(string)?.firstNumber(matching: wanted)
         default:
             return nil
         }
@@ -192,7 +194,10 @@ enum JSONValue: Codable, Hashable, Sendable {
         case .object(let dict):
             if let label = firstString("label", "title", "name", "key", "type", "metric"),
                Self.label(label, matches: wanted) {
-                let valueKeys = ["value", "count", "total", "num", "number", "amount", "percent", "percentage", "usage", "used"]
+                let valueKeys = [
+                    "value", "display_value", "displayValue", "text", "display", "summary",
+                    "count", "total", "num", "number", "amount", "percent", "percentage", "usage", "used"
+                ]
                 for key in valueKeys {
                     let normalized = Self.normalizedKey(key)
                     for (rawKey, value) in dict where Self.normalizedKey(rawKey) == normalized {
@@ -212,6 +217,8 @@ enum JSONValue: Codable, Hashable, Sendable {
                 if let number = value.firstLabeledNumber(matching: wanted) { return number }
             }
             return nil
+        case .string(let string):
+            return Self.parsedJSONString(string)?.firstLabeledNumber(matching: wanted)
         default:
             return nil
         }
@@ -222,13 +229,17 @@ enum JSONValue: Codable, Hashable, Sendable {
         case .number(let n):
             return n
         case .string(let s):
-            return Double(s.trimmingCharacters(in: CharacterSet(charactersIn: "% ")))
+            return Self.decoratedNumber(s)
         case .bool(let b):
             return b ? 1 : 0
         case .array(let a):
             return Double(a.count)
         case .object(let dict):
-            let countKeys = ["count", "total", "value", "percent", "percentage", "usage", "usage_percent", "used_percent"]
+            let countKeys = [
+                "count", "total", "value", "display_value", "displayValue", "text",
+                "num", "number", "amount", "percent", "percentage", "usage",
+                "usage_percent", "used_percent"
+            ]
             for key in countKeys {
                 let wanted = Self.normalizedKey(key)
                 for (rawKey, value) in dict where Self.normalizedKey(rawKey) == wanted {
@@ -246,6 +257,36 @@ enum JSONValue: Codable, Hashable, Sendable {
             .replacingOccurrences(of: "_", with: "")
             .replacingOccurrences(of: "-", with: "")
             .replacingOccurrences(of: " ", with: "")
+    }
+
+    private static func decoratedNumber(_ string: String) -> Double? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let compact = trimmed
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: "，", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "% "))
+        if let exact = Double(compact) { return exact }
+
+        guard let range = compact.range(of: #"[-+]?\d+(?:\.\d+)?"#, options: .regularExpression),
+              let number = Double(String(compact[range])) else {
+            return nil
+        }
+
+        if compact.contains("亿") { return number * 100_000_000 }
+        if compact.contains("万") { return number * 10_000 }
+        if compact.range(of: #"(?i)\d+(?:\.\d+)?k\b"#, options: .regularExpression) != nil {
+            return number * 1_000
+        }
+        return number
+    }
+
+    private static func parsedJSONString(_ string: String) -> JSONValue? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.first == "{" || trimmed.first == "[" else { return nil }
+        guard let data = trimmed.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(JSONValue.self, from: data)
     }
 
     private static func label(_ label: String, matches wanted: Set<String>) -> Bool {

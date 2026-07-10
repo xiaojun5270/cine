@@ -85,6 +85,7 @@ struct MoreView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    hubHeader
                     ForEach(groups) { group in
                         VStack(alignment: .leading, spacing: 12) {
                             SectionHeader(title: group.header)
@@ -106,6 +107,27 @@ struct MoreView: View {
             .appLiquidNavigationChrome()
             .navigationDestination(for: Route.self) { route in
                 destination(for: route)
+            }
+        }
+    }
+
+    private var hubHeader: some View {
+        GlassCard {
+            HStack(spacing: 14) {
+                IconBadge(systemImage: "point.3.connected.trianglepath.dotted", tint: Theme.accentWarm, size: 54, cornerRadius: 17)
+                VStack(alignment: .leading, spacing: 7) {
+                    Text("接口总控")
+                        .font(.title3.bold())
+                    Text("媒体库、订阅、资源转发和系统运维")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                    HStack(spacing: 8) {
+                        GlassPill("工具模块", systemImage: "square.grid.2x2")
+                        GlassPill("Liquid Glass", systemImage: "sparkles", tint: Theme.accentBlue)
+                    }
+                }
+                Spacer(minLength: 0)
             }
         }
     }

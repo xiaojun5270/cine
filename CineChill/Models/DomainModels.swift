@@ -12,7 +12,12 @@ struct DashboardStats {
         raw.firstInt(
             "movie_count", "movieCount", "movies_count", "moviesCount",
             "movie_total", "movieTotal", "movies_total", "moviesTotal",
-            "movie", "movies", "film_count", "filmCount"
+            "total_movie", "totalMovie", "total_movies", "totalMovies",
+            "movie_num", "movieNum", "movies_num", "moviesNum",
+            "movie_number", "movieNumber", "movies_number", "moviesNumber",
+            "library_movie_count", "libraryMovieCount",
+            "movie", "movies", "film_count", "filmCount",
+            "电影数", "电影数量", "电影总数", "影片数", "影片数量", "影片总数"
         )
         ?? raw.firstInt(labeled: "电影", "影片", "movie", "movies", "film")
     }
@@ -21,7 +26,14 @@ struct DashboardStats {
         raw.firstInt(
             "tv_count", "tvCount", "series_count", "seriesCount",
             "show_count", "showCount", "shows_count", "showsCount",
-            "tv_total", "series_total", "tv", "series", "shows"
+            "tv_total", "tvTotal", "series_total", "seriesTotal",
+            "show_total", "showTotal", "shows_total", "showsTotal",
+            "total_tv", "totalTV", "total_series", "totalSeries",
+            "total_shows", "totalShows", "tv_num", "tvNum",
+            "series_num", "seriesNum", "show_num", "showNum",
+            "tv_number", "tvNumber", "series_number", "seriesNumber",
+            "tv", "series", "shows",
+            "剧集数", "剧集数量", "剧集总数", "电视剧数", "电视剧数量", "电视剧总数"
         )
         ?? raw.firstInt(labeled: "剧集", "电视剧", "tv", "series", "shows")
     }
@@ -30,7 +42,12 @@ struct DashboardStats {
         raw.firstInt(
             "episode_count", "episodeCount", "episodes_count", "episodesCount",
             "episode_total", "episodeTotal", "episodes_total", "episodesTotal",
-            "episode", "episodes", "episode_file_count", "episodeFileCount"
+            "total_episode", "totalEpisode", "total_episodes", "totalEpisodes",
+            "episode_num", "episodeNum", "episodes_num", "episodesNum",
+            "episode_number", "episodeNumber", "episodes_number", "episodesNumber",
+            "episode_file_count", "episodeFileCount", "episode_files", "episodeFiles",
+            "episode", "episodes",
+            "剧集集数", "剧集总集数", "集数", "集数总数", "分集数", "分集数量", "分集总数"
         )
         ?? raw.firstInt(labeled: "剧集集数", "集数", "分集", "episode", "episodes")
     }
@@ -39,8 +56,16 @@ struct DashboardStats {
         raw.firstInt(
             "subscription_count", "subscriptionCount", "subscriptions_count", "subscriptionsCount",
             "subscription_total", "subscriptionTotal", "subscriptions_total", "subscriptionsTotal",
+            "total_subscription", "totalSubscription", "total_subscriptions", "totalSubscriptions",
+            "subscription_num", "subscriptionNum", "subscriptions_num", "subscriptionsNum",
+            "subscription_number", "subscriptionNumber", "subscriptions_number", "subscriptionsNumber",
+            "rss_source_count", "rssSourceCount", "rss_sources_count", "rssSourcesCount",
+            "rss_source_total", "rssSourceTotal", "rss_sources_total", "rssSourcesTotal",
             "subscription", "subscriptions", "rss_count", "rssCount", "rss_sources", "rssSources",
-            "moviepilot_subscriptions", "moviepilotSubscriptions"
+            "moviepilot_subscription_count", "moviepilotSubscriptionCount",
+            "moviepilot_subscriptions_count", "moviepilotSubscriptionsCount",
+            "moviepilot_subscriptions", "moviepilotSubscriptions",
+            "订阅数", "订阅数量", "订阅总数", "订阅源数", "订阅源数量", "订阅源总数"
         )
         ?? raw.firstInt(labeled: "订阅", "订阅源", "subscription", "subscriptions", "rss")
     }

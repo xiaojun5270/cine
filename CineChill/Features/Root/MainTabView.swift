@@ -26,6 +26,8 @@ struct MainTabView: View {
         }
         .tint(Theme.accent)
         .tabBarMinimizeBehavior(.onScrollDown)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }

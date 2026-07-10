@@ -128,19 +128,24 @@ struct SubscriptionsView: View {
 
     private func sourceCard(_ source: RssSource) -> some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Circle()
-                        .fill(source.enabled ? Color.green : Color.gray)
-                        .frame(width: 8, height: 8)
-                    Text(source.name).font(.headline).lineLimit(1)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    IconBadge(systemImage: source.enabled ? "dot.radiowaves.up.forward" : "pause.circle.fill",
+                              tint: source.enabled ? Theme.accent : .gray,
+                              size: 42)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(source.name).font(.headline).lineLimit(1)
+                        if !source.rssURL.isEmpty {
+                            Text(source.rssURL).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
                     Spacer()
-                    GlassPill(source.typeLabel)
-                }
-                if !source.rssURL.isEmpty {
-                    Text(source.rssURL).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    GlassPill(source.enabled ? "启用" : "停用",
+                              systemImage: source.enabled ? "checkmark.circle.fill" : "pause.circle",
+                              tint: source.enabled ? Theme.success : .gray)
                 }
                 HStack(spacing: 12) {
+                    GlassPill(source.typeLabel, systemImage: source.mediaType == "movie" ? "film" : "tv")
                     Label(source.subscriptionTarget, systemImage: "target").font(.caption2)
                     if !source.cron.isEmpty {
                         Label(source.cron, systemImage: "clock").font(.caption2)
@@ -148,25 +153,18 @@ struct SubscriptionsView: View {
                 }
                 .foregroundStyle(.secondary)
 
-                HStack(spacing: 10) {
-                    Button { Task { await model.sync(source) } } label: {
-                        Label("同步", systemImage: "arrow.triangle.2.circlepath")
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 82), spacing: 8)], alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "同步", systemImage: "arrow.triangle.2.circlepath", prominent: true) {
+                        Task { await model.sync(source) }
                     }
-                    .appGlassButtonStyle().tint(Theme.accent).controlSize(.small)
-
-                    Button { editing = source; showEditor = true } label: {
-                        Label("编辑", systemImage: "pencil")
+                    ModuleActionButton(title: "编辑", systemImage: "square.and.pencil") {
+                        editing = source
+                        showEditor = true
                     }
-                    .appGlassButtonStyle().controlSize(.small)
-
-                    Spacer()
-
-                    Button(role: .destructive) { Task { await model.delete(source) } } label: {
-                        Image(systemName: "trash")
+                    ModuleActionButton(title: "删除", systemImage: "trash", role: .destructive) {
+                        Task { await model.delete(source) }
                     }
-                    .appGlassButtonStyle().controlSize(.small)
                 }
-                .font(.caption.weight(.semibold))
             }
         }
     }

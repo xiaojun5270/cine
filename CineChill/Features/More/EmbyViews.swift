@@ -75,11 +75,20 @@ struct EmbyUsersView: View {
         let disabled = user["Policy"]["IsDisabled"].bool ?? user["disabled"].bool ?? false
         return GlassCard {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: "person.crop.circle.fill").foregroundStyle(Theme.accent)
-                    Text(name).font(.headline)
+                HStack(spacing: 12) {
+                    IconBadge(systemImage: disabled ? "person.crop.circle.badge.xmark" : "person.crop.circle.fill",
+                              tint: disabled ? .gray : Theme.accent,
+                              size: 38)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(name).font(.headline).lineLimit(1)
+                        if !id.isEmpty {
+                            Text(id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
                     Spacer()
-                    StatusChip(text: disabled ? "已禁用" : "启用中", ok: !disabled)
+                    GlassPill(disabled ? "已禁用" : "启用中",
+                              systemImage: disabled ? "pause.circle" : "checkmark.circle.fill",
+                              tint: disabled ? .gray : Theme.success)
                 }
                 LazyVGrid(columns: buttonColumns, spacing: 8) {
                     ModuleActionButton(title: "详情", systemImage: "info.circle") {
@@ -105,11 +114,27 @@ struct EmbyUsersView: View {
 
     private var createSheet: some View {
         NavigationStack {
-            Form {
-                Section("新用户") {
-                    TextField("用户名", text: $newName)
-                    SecureField("初始密码（可选）", text: $newPassword)
+            ScrollView {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 12) {
+                            IconBadge(systemImage: "person.crop.circle.badge.plus", tint: Theme.accent, size: 44)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("新用户").font(.headline)
+                                Text("创建 Emby 用户并可设置初始密码").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        TextField("用户名", text: $newName)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textContentType(.username)
+                            .appInputFieldChrome()
+                        SecureField("初始密码（可选）", text: $newPassword)
+                            .textContentType(.newPassword)
+                            .appInputFieldChrome()
+                    }
                 }
+                .padding(Theme.screenPadding)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())

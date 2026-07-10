@@ -16,29 +16,36 @@ struct RssSourceEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("基本信息") {
-                    TextField("名称", text: $name)
-                    TextField("RSS 地址", text: $rssURL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .keyboardType(.URL)
-                }
-                Section("媒体类型") {
-                    Picker("类型", selection: $mediaType) {
-                        Text("剧集").tag("tv")
-                        Text("电影").tag("movie")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("基本信息", systemImage: "antenna.radiowaves.left.and.right")
+                                .font(.headline)
+                            formField("名称", text: $name, icon: "textformat")
+                            formField("RSS 地址", text: $rssURL, icon: "link")
+                                .keyboardType(.URL)
+                        }
                     }
-                    .pickerStyle(.segmented)
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("订阅设置", systemImage: "slider.horizontal.3")
+                                .font(.headline)
+                            Picker("类型", selection: $mediaType) {
+                                Text("剧集").tag("tv")
+                                Text("电影").tag("movie")
+                            }
+                            .pickerStyle(.segmented)
+                            formField("订阅目标", text: $target, icon: "target")
+                            formField("Cron 表达式", text: $cron, icon: "clock")
+                            Toggle(isOn: $enabled) {
+                                Label("启用", systemImage: enabled ? "checkmark.circle.fill" : "pause.circle")
+                            }
+                            .tint(Theme.accent)
+                        }
+                    }
                 }
-                Section("订阅设置") {
-                    TextField("订阅目标", text: $target)
-                        .textInputAutocapitalization(.never)
-                    TextField("Cron 表达式", text: $cron)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Toggle("启用", isOn: $enabled).tint(Theme.accent)
-                }
+                .padding(Theme.screenPadding)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
@@ -56,6 +63,19 @@ struct RssSourceEditor: View {
             }
             .onAppear(perform: populate)
         }
+    }
+
+    private func formField(_ placeholder: String, text: Binding<String>, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Theme.accent)
+                .frame(width: 20)
+            TextField(placeholder, text: text)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+        }
+        .appInputFieldChrome()
     }
 
     private func populate() {

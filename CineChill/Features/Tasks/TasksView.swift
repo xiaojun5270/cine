@@ -9,6 +9,7 @@ struct TasksView: View {
     @State private var editingTaskID = ""
     @State private var rawTaskBody = ""
     @State private var rawBatchBody = ""
+    private let actionColumns = [GridItem(.adaptive(minimum: 82), spacing: 8)]
 
     private enum TaskPanel: Identifiable, Equatable {
         case progress
@@ -157,9 +158,17 @@ struct TasksView: View {
 
     private func taskCard(_ task: TaskItem) -> some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text(task.name).font(.headline).lineLimit(1)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    IconBadge(systemImage: task.enabled ? "checklist" : "pause.circle.fill",
+                              tint: task.enabled ? Theme.accent : .gray,
+                              size: 42)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(task.name).font(.headline).lineLimit(1)
+                        if let status = task.status {
+                            Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { task.enabled },
@@ -168,35 +177,27 @@ struct TasksView: View {
                     .labelsHidden()
                     .tint(Theme.accent)
                 }
-                HStack(spacing: 10) {
-                    if let type = task.type { GlassPill(type, systemImage: "tag") }
-                    if let status = task.status { GlassPill(status, systemImage: "info.circle") }
-                    if let cron = task.cron { GlassPill(cron, systemImage: "clock") }
-                }
-                HStack(spacing: 10) {
-                    Button { Task { await model.run(task) } } label: {
-                        Label("运行", systemImage: "play.fill")
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        if let type = task.type { GlassPill(type, systemImage: "tag") }
+                        if let cron = task.cron { GlassPill(cron, systemImage: "clock") }
                     }
-                    .appGlassButtonStyle(prominent: true).tint(Theme.accent).controlSize(.small)
+                }
+                LazyVGrid(columns: actionColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "运行", systemImage: "play.fill", prominent: true) {
+                        Task { await model.run(task) }
+                    }
                     .disabled(model.runningIDs.contains(task.id))
-
-                    Button { Task { await model.stop(task) } } label: {
-                        Label("停止", systemImage: "stop.fill")
+                    ModuleActionButton(title: "停止", systemImage: "stop.fill") {
+                        Task { await model.stop(task) }
                     }
-                    .appGlassButtonStyle().controlSize(.small)
-
-                    Button { edit(task) } label: {
-                        Label("编辑", systemImage: "square.and.pencil")
+                    ModuleActionButton(title: "编辑", systemImage: "square.and.pencil") {
+                        edit(task)
                     }
-                    .appGlassButtonStyle().controlSize(.small)
-
-                    Button(role: .destructive) { taskToDelete = task } label: {
-                        Label("删除", systemImage: "trash")
+                    ModuleActionButton(title: "删除", systemImage: "trash", role: .destructive) {
+                        taskToDelete = task
                     }
-                    .appGlassButtonStyle().controlSize(.small)
-                    Spacer()
                 }
-                .font(.caption.weight(.semibold))
             }
         }
     }

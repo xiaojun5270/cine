@@ -185,7 +185,9 @@ struct ModuleActionButton: View {
 /// Simple toast/alert bound to an optional message string.
 extension View {
     func appLiquidNavigationChrome() -> some View {
-        toolbarBackground(.visible, for: .navigationBar)
+        toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .tint(Theme.accent)
     }
 

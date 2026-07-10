@@ -140,12 +140,20 @@ struct NotifyView: View {
                             SectionHeader(title: "通知渠道")
                             ForEach(model.channels) { channel in
                                 GlassCard {
-                                    HStack {
-                                        Text(channel.name).font(.subheadline.weight(.medium))
+                                    HStack(spacing: 12) {
+                                        IconBadge(systemImage: channel.enabled ? "bell.badge.fill" : "bell.slash.fill",
+                                                  tint: channel.enabled ? Theme.accent : .gray,
+                                                  size: 38)
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(channel.name).font(.subheadline.weight(.semibold))
+                                            Text(channel.enabled ? "可用于发送通知" : "当前未启用")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
                                         Spacer()
-                                        Text(channel.enabled ? "已启用" : "未启用")
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(channel.enabled ? Color.green : .secondary)
+                                        GlassPill(channel.enabled ? "已启用" : "未启用",
+                                                  systemImage: channel.enabled ? "checkmark.circle.fill" : "pause.circle",
+                                                  tint: channel.enabled ? Theme.success : .gray)
                                     }
                                 }
                             }
@@ -281,16 +289,14 @@ struct NotifyView: View {
     private func integrationCard(title: String, icon: String, connected: Bool, test: @escaping () async -> Void) -> some View {
         GlassCard {
             HStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 44, height: 44)
-                    .appGlassCircle()
-                VStack(alignment: .leading, spacing: 3) {
+                IconBadge(systemImage: icon,
+                          tint: connected ? Theme.accent : .gray,
+                          size: 46)
+                VStack(alignment: .leading, spacing: 5) {
                     Text(title).font(.headline)
-                    Text(connected ? "已连接" : "未连接")
-                        .font(.caption)
-                        .foregroundStyle(connected ? Color.green : .secondary)
+                    GlassPill(connected ? "已连接" : "未连接",
+                              systemImage: connected ? "checkmark.circle.fill" : "exclamationmark.circle",
+                              tint: connected ? Theme.success : .gray)
                 }
                 Spacer()
                 Button("测试") { Task { await test() } }

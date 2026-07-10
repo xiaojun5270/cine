@@ -62,6 +62,21 @@ final class SessionStore {
         phase = .authenticated
     }
 
+    func validateStoredLogin() async {
+        guard phase == .authenticated else { return }
+        do {
+            let info = try await AuthService().userInfo()
+            if let name = info.firstString("username", "user", "name", "account") {
+                username = name
+                defaults.set(name, forKey: userKey)
+            }
+        } catch APIError.unauthorized {
+            logout()
+        } catch {
+            // Keep the current screen for transient network failures.
+        }
+    }
+
     func logout() {
         defaults.set(false, forKey: loggedInKey)
         APIClient.shared.clearCookies()

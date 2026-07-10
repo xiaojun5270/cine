@@ -92,14 +92,33 @@ struct MoviePilotView: View {
 
     private var configSheet: some View {
         NavigationStack {
-            Form {
-                Section("MoviePilot") {
-                    TextField("地址", text: $mpURL)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    TextField("用户名", text: $mpUsername)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("密码", text: $mpPassword)
+            ScrollView {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 12) {
+                            IconBadge(systemImage: "airplane.departure", tint: Theme.accentBlue, size: 44)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("MoviePilot").font(.headline)
+                                Text("连接地址和登录凭据").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        TextField("地址", text: $mpURL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .textContentType(.URL)
+                            .appInputFieldChrome()
+                        TextField("用户名", text: $mpUsername)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textContentType(.username)
+                            .appInputFieldChrome()
+                        SecureField("密码", text: $mpPassword)
+                            .textContentType(.password)
+                            .appInputFieldChrome()
+                    }
                 }
+                .padding(Theme.screenPadding)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
@@ -115,19 +134,37 @@ struct MoviePilotView: View {
 
     private var subscribeSheet: some View {
         NavigationStack {
-            Form {
-                Section("订阅信息") {
-                    TextField("TMDB ID", text: $subscribeTMDB)
-                        .keyboardType(.numberPad)
-                    Picker("类型", selection: $subscribeType) {
-                        Text("电影").tag("movie")
-                        Text("剧集").tag("tv")
+            ScrollView {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 12) {
+                            IconBadge(systemImage: "plus.circle.fill", tint: Theme.accent, size: 44)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("订阅信息").font(.headline)
+                                Text("按 TMDB ID 创建 MoviePilot 订阅").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                        TextField("TMDB ID", text: $subscribeTMDB)
+                            .keyboardType(.numberPad)
+                            .appInputFieldChrome()
+                        Picker("类型", selection: $subscribeType) {
+                            Text("电影").tag("movie")
+                            Text("剧集").tag("tv")
+                        }
+                        .pickerStyle(.segmented)
+                        TextField("季（剧集可选）", text: $subscribeSeason)
+                            .keyboardType(.numberPad)
+                            .appInputFieldChrome()
+                        TextField("名称（可选）", text: $subscribeName)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .appInputFieldChrome()
+                        TextField("年份（可选）", text: $subscribeYear)
+                            .keyboardType(.numberPad)
+                            .appInputFieldChrome()
                     }
-                    TextField("季（剧集可选）", text: $subscribeSeason)
-                        .keyboardType(.numberPad)
-                    TextField("名称（可选）", text: $subscribeName)
-                    TextField("年份（可选）", text: $subscribeYear)
                 }
+                .padding(Theme.screenPadding)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())

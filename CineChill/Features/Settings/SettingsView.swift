@@ -12,76 +12,115 @@ struct SettingsView: View {
     @State private var rawServerConfig = ""
 
     var body: some View {
-        List {
-                Section {
-                    HStack(spacing: 14) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(Theme.accent)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(session.username ?? "用户").font(.headline)
-                            Text(session.server?.displayString ?? "").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-
-                Section("通知") {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                accountHeader
+                settingsGroup("通知") {
                     NavigationLink { NotifyView() } label: {
-                        Label("通知配置", systemImage: "bell.badge.fill")
+                        settingsRow(title: "通知配置", subtitle: "Telegram、企业微信、模板", icon: "bell.badge.fill", tint: Theme.accentPink)
                     }
+                    .buttonStyle(.plain)
                 }
-
-                Section("账号与服务器") {
+                settingsGroup("账号与服务器") {
                     Button { showChangePassword = true } label: {
-                        Label("修改账号 / 密码", systemImage: "key.fill")
+                        settingsRow(title: "修改账号 / 密码", subtitle: "更新当前登录凭据", icon: "key.fill", tint: Theme.accentWarm)
                     }
                     Button { Task { await openServerConfig() } } label: {
-                        Label("编辑服务器配置", systemImage: "slider.horizontal.3")
+                        settingsRow(title: "编辑服务器配置", subtitle: "读取和保存全局 JSON", icon: "slider.horizontal.3", tint: Theme.accent)
                     }
                     Button { showServerTools = true } label: {
-                        Label("服务器接口工具", systemImage: "wrench.and.screwdriver")
+                        settingsRow(title: "服务器接口工具", subtitle: "Emby、代理、海报 URL", icon: "wrench.and.screwdriver.fill", tint: Theme.accentBlue)
                     }
                     Button { session.forgetServer() } label: {
-                        Label("更换服务器", systemImage: "arrow.triangle.2.circlepath")
+                        settingsRow(title: "更换服务器", subtitle: "回到服务器连接页", icon: "arrow.triangle.2.circlepath", tint: .cyan)
                     }
                     Button(role: .destructive) { showRestartConfirm = true } label: {
-                        Label("重启服务器", systemImage: "power")
+                        settingsRow(title: "重启服务器", subtitle: "发送后端重启指令", icon: "power", tint: Theme.danger)
                     }
                 }
-
-                Section {
+                settingsGroup("会话") {
                     Button(role: .destructive) { showLogoutConfirm = true } label: {
-                        Label("退出登录", systemImage: "rectangle.portrait.and.arrow.right")
+                        settingsRow(title: "退出登录", subtitle: "清除当前登录状态", icon: "rectangle.portrait.and.arrow.right", tint: Theme.danger)
                     }
                 }
+                versionCard
+            }
+            .padding(Theme.screenPadding)
+            .padding(.bottom, 36)
+        }
+        .scrollContentBackground(.hidden)
+        .background(Theme.backgroundGradient.ignoresSafeArea())
+        .navigationTitle("设置")
+        .appLiquidNavigationChrome()
+        .sheet(isPresented: $showChangePassword) { ChangePasswordView() }
+        .sheet(isPresented: $showServerConfig) { serverConfigSheet }
+        .sheet(isPresented: $showServerTools) { ServerToolsSheet() }
+        .confirmationDialog("确定退出登录？", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
+            Button("退出登录", role: .destructive) { session.logout() }
+            Button("取消", role: .cancel) {}
+        }
+        .confirmationDialog("确定重启服务器？", isPresented: $showRestartConfirm, titleVisibility: .visible) {
+            Button("重启", role: .destructive) { Task { await restart() } }
+            Button("取消", role: .cancel) {}
+        }
+        .alert("提示", isPresented: Binding(
+            get: { toast != nil }, set: { if !$0 { toast = nil } }
+        )) { Button("好", role: .cancel) {} } message: { Text(toast ?? "") }
+    }
 
-                Section {
-                    HStack {
-                        Text("版本"); Spacer()
-                        Text("CineChill Mobile 1.0.0").foregroundStyle(.secondary)
-                    }
-                    .font(.footnote)
+    private var accountHeader: some View {
+        GlassCard {
+            HStack(spacing: 14) {
+                IconBadge(systemImage: "person.crop.circle.fill", tint: Theme.accent, size: 54, cornerRadius: 17)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(session.username ?? "用户")
+                        .font(.title3.bold())
+                    Text(session.server?.displayString ?? "未连接服务器")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                GlassPill("在线", systemImage: "checkmark.circle.fill", tint: Theme.success)
+            }
+        }
+    }
+
+    private func settingsGroup<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: title)
+            GlassCard {
+                VStack(spacing: 2) {
+                    content()
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(Theme.backgroundGradient.ignoresSafeArea())
-            .navigationTitle("设置")
-            .appLiquidNavigationChrome()
-            .sheet(isPresented: $showChangePassword) { ChangePasswordView() }
-            .sheet(isPresented: $showServerConfig) { serverConfigSheet }
-            .sheet(isPresented: $showServerTools) { ServerToolsSheet() }
-            .confirmationDialog("确定退出登录？", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
-                Button("退出登录", role: .destructive) { session.logout() }
-                Button("取消", role: .cancel) {}
+        }
+    }
+
+    private func settingsRow(title: String, subtitle: String, icon: String, tint: Color) -> some View {
+        HStack(spacing: 12) {
+            IconBadge(systemImage: icon, tint: tint, size: 38, cornerRadius: 12)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.subheadline.weight(.semibold))
+                Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
-            .confirmationDialog("确定重启服务器？", isPresented: $showRestartConfirm, titleVisibility: .visible) {
-                Button("重启", role: .destructive) { Task { await restart() } }
-                Button("取消", role: .cancel) {}
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.tertiary)
+        }
+        .foregroundStyle(.primary)
+        .padding(.vertical, 7)
+    }
+
+    private var versionCard: some View {
+        GlassCard {
+            HStack {
+                GlassPill("CineChill Mobile", systemImage: "app.badge")
+                Spacer()
+                Text("1.0.0").font(.footnote.weight(.semibold)).foregroundStyle(.secondary)
             }
-            .alert("提示", isPresented: Binding(
-                get: { toast != nil }, set: { if !$0 { toast = nil } }
-            )) { Button("好", role: .cancel) {} } message: { Text(toast ?? "") }
+        }
     }
 
     private var serverConfigSheet: some View {
@@ -353,18 +392,39 @@ struct ChangePasswordView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("当前") {
-                    SecureField("当前密码", text: $oldPassword)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    GlassCard {
+                        VStack(alignment: .leading, spacing: 14) {
+                            HStack(spacing: 12) {
+                                IconBadge(systemImage: "key.fill", tint: Theme.accentWarm, size: 44)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("修改登录凭据").font(.headline)
+                                    Text("保存后需要重新登录").font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            SecureField("当前密码", text: $oldPassword)
+                                .textContentType(.password)
+                                .appInputFieldChrome()
+                            TextField("新用户名", text: $newUsername)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .textContentType(.username)
+                                .appInputFieldChrome()
+                            SecureField("新密码", text: $newPassword)
+                                .textContentType(.newPassword)
+                                .appInputFieldChrome()
+                        }
+                    }
+                    if let errorText {
+                        GlassCard {
+                            Label(errorText, systemImage: "exclamationmark.triangle.fill")
+                                .font(.footnote)
+                                .foregroundStyle(Theme.danger)
+                        }
+                    }
                 }
-                Section("新账号") {
-                    TextField("新用户名", text: $newUsername)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField("新密码", text: $newPassword)
-                }
-                if let errorText {
-                    Section { Text(errorText).foregroundStyle(.red).font(.footnote) }
-                }
+                .padding(Theme.screenPadding)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())

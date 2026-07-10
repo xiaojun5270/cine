@@ -35,6 +35,15 @@ extension View {
         glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
     }
 
+    func appInputFieldChrome(cornerRadius: CGFloat = 10) -> some View {
+        padding(12)
+            .background(.white.opacity(0.075), in: .rect(cornerRadius: cornerRadius))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(.white.opacity(0.10), lineWidth: 0.7)
+            }
+    }
+
     func appGlassCircle() -> some View {
         glassEffect(.regular, in: .circle)
     }

@@ -54,16 +54,13 @@ struct LoginView: View {
             }
             .padding(.top, 60)
         }
+        .background(Theme.backgroundGradient.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
     }
 
     private var header: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "film.stack.fill")
-                .font(.system(size: 46))
-                .foregroundStyle(Theme.accent)
-                .padding(20)
-                .appGlassCircle()
+        VStack(spacing: 14) {
+            IconBadge(systemImage: "film.stack.fill", tint: Theme.accent, size: 72, cornerRadius: 22)
             Text("欢迎回来").font(.title.bold())
             Text("登录 CineChill 账号").font(.callout).foregroundStyle(.secondary)
         }
@@ -72,7 +69,10 @@ struct LoginView: View {
     @ViewBuilder
     private func field(icon: String, placeholder: String, text: Binding<String>, isSecure: Bool) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: icon).foregroundStyle(.secondary).frame(width: 20)
+            Image(systemName: icon)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(Theme.accent)
+                .frame(width: 20)
             if isSecure {
                 SecureField(placeholder, text: text)
             } else {
@@ -81,8 +81,7 @@ struct LoginView: View {
                     .autocorrectionDisabled()
             }
         }
-        .padding(12)
-        .background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+        .appInputFieldChrome()
     }
 
     private func login() async {

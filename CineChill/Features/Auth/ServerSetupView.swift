@@ -23,8 +23,7 @@ struct ServerSetupView: View {
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .keyboardType(.URL)
-                                .padding(12)
-                                .background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                                .appInputFieldChrome()
                             Text("默认端口 5256。可填 IP、域名，或带 http(s):// 的完整地址。")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
@@ -53,16 +52,13 @@ struct ServerSetupView: View {
             }
             .padding(.top, 60)
         }
+        .background(Theme.backgroundGradient.ignoresSafeArea())
         .scrollDismissesKeyboard(.interactively)
     }
 
     private var header: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "film.stack.fill")
-                .font(.system(size: 52))
-                .foregroundStyle(Theme.accent)
-                .padding(22)
-                .appGlassCircle()
+        VStack(spacing: 14) {
+            IconBadge(systemImage: "play.tv.fill", tint: Theme.accent, size: 78, cornerRadius: 24)
             Text("CineChill")
                 .font(.largeTitle.bold())
             Text("连接你的媒体管理服务")

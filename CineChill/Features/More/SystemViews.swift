@@ -6,14 +6,62 @@ struct SystemHealthView: View {
     @State private var network: JSONValue?
     @State private var isLoading = true
     @State private var error: Error?
+    @State private var toast: String?
+    @State private var targetID = ""
+    @State private var result: JSONValue?
+    @State private var resultTitle = "结果"
+    @State private var showResult = false
 
     var body: some View {
         ModuleScaffold(title: "系统健康", isLoading: isLoading && health == nil, error: health == nil ? error : nil,
-                       onRetry: { Task { await load() } }) {
+                       onRetry: { Task { await load() } }, toolbarContent: AnyView(toolbarMenu)) {
+            GlassCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("目标检测").font(.headline)
+                    TextField("target_id（留空检测默认目标）", text: $targetID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], alignment: .leading, spacing: 8) {
+                        ModuleActionButton(title: "健康检测", systemImage: "waveform.path.ecg", prominent: true) {
+                            Task { await healthCheck() }
+                        }
+                        ModuleActionButton(title: "网络快检", systemImage: "network") {
+                            Task { await networkCheck(full: false) }
+                        }
+                        ModuleActionButton(title: "网络全检", systemImage: "antenna.radiowaves.left.and.right") {
+                            Task { await networkCheck(full: true) }
+                        }
+                    }
+                }
+            }
             if let health { JSONKeyValueCard(title: "系统状态", json: health, limit: 24) }
             if let network { JSONKeyValueCard(title: "网络", json: network, limit: 16) }
         }
         .task { await load() }
+        .toast($toast)
+        .sheet(isPresented: $showResult) { JSONResultSheet(title: resultTitle, json: result) }
+    }
+
+    private var toolbarMenu: some View {
+        Menu {
+            Button {
+                Task { await showTargets() }
+            } label: {
+                Label("健康目标列表", systemImage: "list.bullet.rectangle")
+            }
+            Button {
+                Task { await showNetworkTargets() }
+            } label: {
+                Label("网络目标列表", systemImage: "point.3.connected.trianglepath.dotted")
+            }
+            Button {
+                Task { await networkCheck(full: true) }
+            } label: {
+                Label("立即全量网络检测", systemImage: "bolt.horizontal")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
     }
 
     private func load() async {
@@ -23,6 +71,40 @@ struct SystemHealthView: View {
         do { health = try await h } catch { self.error = error }
         network = try? await n
         isLoading = false
+    }
+
+    private func healthCheck() async {
+        do {
+            result = try await service.health(targetID: targetID.isEmpty ? nil : targetID)
+            resultTitle = "健康检测"
+            showResult = true
+            health = result
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func networkCheck(full: Bool) async {
+        do {
+            result = try await service.network(targetID: targetID.isEmpty ? nil : targetID, full: full)
+            resultTitle = full ? "网络全检" : "网络快检"
+            showResult = true
+            network = result
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func showTargets() async {
+        do {
+            result = try await service.targets()
+            resultTitle = "健康目标"
+            showResult = true
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func showNetworkTargets() async {
+        do {
+            result = try await service.networkTargets(full: true)
+            resultTitle = "网络目标"
+            showResult = true
+        } catch { toast = error.localizedDescription }
     }
 }
 

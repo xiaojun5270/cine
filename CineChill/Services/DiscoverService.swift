@@ -52,16 +52,43 @@ struct DiscoverService {
 
     // MARK: Detail
 
-    func detail(tmdbID: Int) async throws -> JSONValue {
-        try await client.request(.get, "/api/discover/detail/\(tmdbID)")
+    func detail(tmdbID: Int, mediaType: String = "movie") async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/detail/\(tmdbID)", query: ["type": mediaType])
     }
 
     func seasonDetail(tmdbID: Int, season: Int) async throws -> JSONValue {
         try await client.request(.get, "/api/discover/tv/\(tmdbID)/season/\(season)")
     }
 
+    func events() async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/events")
+    }
+
+    func genres() async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/genres")
+    }
+
+    func sources() async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/sources")
+    }
+
+    func libraryExists(tmdbID: Int, mediaType: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/discover/library/exists",
+                                 body: JSONValue.obj(["tmdb_id": tmdbID, "media_type": mediaType]))
+    }
+
     func libraryStatus(tmdbID: Int) async throws -> JSONValue {
         try await client.request(.get, "/api/discover/library/series/\(tmdbID)")
+    }
+
+    func missingEpisodeStats(refresh: Bool = false, summaryOnly: Bool = true) async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/library/missing-episode-stats",
+                                 query: ["refresh": refresh ? "1" : "0",
+                                         "summary_only": summaryOnly ? "1" : "0"])
+    }
+
+    func tmdbArtworkBatch(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/discover/tmdb_artwork/batch", body: body)
     }
 
     // MARK: Image URLs

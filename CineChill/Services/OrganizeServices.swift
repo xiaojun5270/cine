@@ -89,6 +89,9 @@ struct SystemHealthService {
         try await client.request(.get, "/api/system_health/network", query: ["target_id": targetID, "full": String(full)])
     }
     func lastNetwork() async throws -> JSONValue { try await client.request(.get, "/api/system_health/network/last") }
+    func networkTargets(full: Bool = false) async throws -> JSONValue {
+        try await client.request(.get, "/api/system_health/network/targets", query: ["full": String(full)])
+    }
 }
 
 /// Upgrade group.

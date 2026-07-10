@@ -106,6 +106,51 @@ struct StatusChip: View {
     }
 }
 
+/// Shared JSON result viewer for module actions.
+struct JSONResultSheet: View {
+    let title: String
+    let json: JSONValue?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    switch json {
+                    case .none, .some(.null):
+                        EmptyStateView(systemImage: "doc.text", title: "暂无结果")
+                            .frame(minHeight: 220)
+                    case .some(.string(let text)):
+                        Text(text.isEmpty ? "暂无结果" : text)
+                            .font(.system(.caption, design: .monospaced))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    case .some(let json):
+                        let items = json.items()
+                        if items.isEmpty {
+                            JSONKeyValueCard(title: nil, json: json, limit: 120)
+                        } else {
+                            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                                JSONKeyValueCard(title: "#\(index + 1)", json: item, limit: 32)
+                            }
+                        }
+                    }
+                }
+                .padding(Theme.screenPadding)
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("关闭") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
 /// A reusable action button used across module cards.
 struct ModuleActionButton: View {
     let title: String

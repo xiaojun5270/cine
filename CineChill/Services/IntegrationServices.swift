@@ -10,6 +10,12 @@ struct MoviePilotService {
     }
     func test() async throws -> JSONValue { try await client.request(.post, "/api/moviepilot/test") }
     func subscriptions() async throws -> JSONValue { try await client.request(.get, "/api/moviepilot/subscribe") }
+    func checkSubscription(tmdbID: Int, typeName: String, season: Int?) async throws -> JSONValue {
+        try await client.request(.get, "/api/moviepilot/subscribe/check",
+                                 query: ["tmdbid": String(tmdbID),
+                                         "type_name": typeName,
+                                         "season": season.map(String.init)])
+    }
     func subscribe(tmdbID: Int, typeName: String, season: Int?, name: String?, year: String?) async throws {
         _ = try await client.request(.post, "/api/moviepilot/subscribe",
             body: JSONValue.obj(["tmdbid": tmdbID, "type_name": typeName, "season": season, "name": name, "year": year]))
@@ -68,14 +74,33 @@ struct Config302Service {
 struct ForwardService {
     let client = APIClient.shared
     func config() async throws -> JSONValue { try await client.request(.get, "/api/forward/config") }
+    func saveConfig(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/config", body: body)
+    }
     func searchSources() async throws -> JSONValue { try await client.request(.get, "/api/forward/search_sources") }
     func searchResources(type: String, tmdbID: Int, title: String?, year: String?, season: Int?, episode: Int?, sources: [String]?) async throws -> JSONValue {
         try await client.request(.post, "/api/forward/search_resources",
             body: JSONValue.obj(["type": type, "tmdb_id": tmdbID, "title": title, "year": year,
                                  "season": season, "episode": episode, "sources": sources]))
     }
+    func resources(type: String, tmdbID: Int) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/resources",
+                                 body: JSONValue.obj(["type": type, "tmdb_id": tmdbID]))
+    }
     func testResources(type: String, tmdbID: Int) async throws -> JSONValue {
         try await client.request(.post, "/api/forward/test_resources", body: JSONValue.obj(["type": type, "tmdb_id": tmdbID]))
+    }
+    func previewResource(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/preview_resource", body: body)
+    }
+    func downloadResource(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/download_resource", body: body)
+    }
+    func transferResource(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/transfer_resource", body: body)
+    }
+    func refreshToken() async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/token/refresh")
     }
 }
 
@@ -104,6 +129,28 @@ struct ResourcesService {
     func layouts() async throws -> JSONValue { try await client.request(.get, "/api/layouts") }
     func fonts() async throws -> JSONValue { try await client.request(.get, "/api/fonts") }
     func translations() async throws -> JSONValue { try await client.request(.get, "/api/translations") }
+    func suiteContent(name: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/get_suite_content", body: JSONValue.obj(["suite_name": name]))
+    }
+    func preview(_ body: JSONValue) async throws -> JSONValue { try await client.request(.post, "/api/preview", body: body) }
+    func apply(_ body: JSONValue) async throws -> JSONValue { try await client.request(.post, "/api/apply", body: body) }
+    func createSuite(_ body: JSONValue) async throws -> JSONValue { try await client.request(.post, "/api/create_suite", body: body) }
+    func restoreSuite(_ body: JSONValue) async throws -> JSONValue { try await client.request(.post, "/api/restore_suite", body: body) }
+    func deleteSuite(name: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/delete_suite", body: JSONValue.obj(["suite_name": name]))
+    }
+    func deleteTemplate(name: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/delete_template", body: JSONValue.obj(["template_name": name, "name": name]))
+    }
+    func deleteFont(name: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/delete_font", body: JSONValue.obj(["font_name": name, "name": name]))
+    }
+    func saveTemplate(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/save_template", body: body)
+    }
+    func saveTranslations(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/save_translations", body: body)
+    }
 }
 
 /// RSS group (原生 RSS 任务 + 内置源).

@@ -9,10 +9,23 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A100000000000000000001 /* CineChill */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A100000000000000000010 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+			);
 			path = CineChill;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A100000000000000000010 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = A100000000000000000006 /* CineChill */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileReference section */
 		A100000000000000000002 /* CineChill.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CineChill.app; sourceTree = BUILT_PRODUCTS_DIR; };

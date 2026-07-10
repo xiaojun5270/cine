@@ -23,7 +23,7 @@ struct ModuleScaffold<Content: View>: View {
                 EmptyStateView(systemImage: emptyIcon, title: emptyTitle)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
+                    LazyVStack(alignment: .leading, spacing: 14) {
                         content
                     }
                     .padding(Theme.screenPadding)

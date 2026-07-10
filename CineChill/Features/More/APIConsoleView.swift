@@ -1,11 +1,11 @@
 import SwiftUI
 
-struct APIEndpointManifest: Decodable {
+struct APIEndpointManifest: Decodable, Sendable {
     let count: Int
     let endpoints: [APIEndpoint]
 }
 
-struct APIEndpoint: Decodable, Identifiable, Hashable {
+struct APIEndpoint: Decodable, Identifiable, Hashable, Sendable {
     var id: String { "\(method) \(path)" }
     let group: String
     let method: String
@@ -31,7 +31,7 @@ struct APIEndpoint: Decodable, Identifiable, Hashable {
     }
 }
 
-struct APIQueryParam: Decodable, Hashable {
+struct APIQueryParam: Decodable, Hashable, Sendable {
     let name: String
     let location: String
     let type: String
@@ -39,7 +39,7 @@ struct APIQueryParam: Decodable, Hashable {
     let description: String
 }
 
-struct APIBodyField: Decodable, Hashable {
+struct APIBodyField: Decodable, Hashable, Sendable {
     let name: String
     let type: String
     let required: Bool
@@ -47,7 +47,19 @@ struct APIBodyField: Decodable, Hashable {
 }
 
 enum APIEndpointCatalog {
+    private static let cachedEndpoints: [APIEndpoint] = decode()
+
     static func load() -> [APIEndpoint] {
+        cachedEndpoints
+    }
+
+    static func loadAsync() async -> [APIEndpoint] {
+        await Task.detached(priority: .userInitiated) {
+            load()
+        }.value
+    }
+
+    private static func decode() -> [APIEndpoint] {
         guard let url = Bundle.main.url(forResource: "api_manifest", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let manifest = try? JSONDecoder().decode(APIEndpointManifest.self, from: data)
@@ -57,7 +69,8 @@ enum APIEndpointCatalog {
 }
 
 struct APIConsoleView: View {
-    @State private var endpoints = APIEndpointCatalog.load()
+    @State private var endpoints: [APIEndpoint] = []
+    @State private var isLoading = true
     @State private var searchText = ""
     @State private var selectedEndpoint: APIEndpoint?
 
@@ -76,9 +89,9 @@ struct APIConsoleView: View {
     var body: some View {
         ModuleScaffold(
             title: "接口总控",
-            isLoading: false,
+            isLoading: isLoading,
             error: nil,
-            isEmpty: filteredGroups.isEmpty,
+            isEmpty: !isLoading && filteredGroups.isEmpty,
             emptyTitle: "没有匹配接口",
             emptyIcon: "point.3.connected.trianglepath.dotted"
         ) {
@@ -104,10 +117,22 @@ struct APIConsoleView: View {
                 }
             }
         }
+        .task { await loadEndpoints() }
         .searchable(text: $searchText, prompt: "搜索接口、路径、分组")
         .sheet(item: $selectedEndpoint) { endpoint in
             EndpointRunnerView(endpoint: endpoint)
         }
+    }
+
+    @MainActor
+    private func loadEndpoints() async {
+        guard endpoints.isEmpty else {
+            isLoading = false
+            return
+        }
+        isLoading = true
+        endpoints = await APIEndpointCatalog.loadAsync()
+        isLoading = false
     }
 
     private func endpointCard(_ endpoint: APIEndpoint) -> some View {

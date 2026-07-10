@@ -161,24 +161,61 @@ struct ModuleActionButton: View {
 
     var body: some View {
         Button(role: role, action: action) {
-            VStack(spacing: 5) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 14, weight: .semibold))
-                    .frame(height: 15)
+            VStack(spacing: 7) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(buttonTint.opacity(prominent ? 0.24 : 0.16))
+                    Image(systemName: systemImage)
+                        .font(.system(size: 14, weight: .semibold))
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .foregroundStyle(prominent ? Color.white : buttonTint)
+                .frame(width: 26, height: 24)
+
                 Text(title)
                     .font(.caption2.weight(.semibold))
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.78)
+                    .minimumScaleFactor(0.74)
                     .allowsTightening(true)
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity, minHeight: 42)
-            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, height: 58)
             .contentShape(Rectangle())
         }
-        .appGlassButtonStyle(prominent: prominent)
-        .tint(Theme.accent)
-        .symbolRenderingMode(.hierarchical)
+        .buttonStyle(ModuleActionTileButtonStyle(prominent: prominent, tint: buttonTint))
+    }
+
+    private var buttonTint: Color {
+        role == .destructive ? Theme.danger : (prominent ? Theme.accent : Theme.accentBlue)
+    }
+}
+
+private struct ModuleActionTileButtonStyle: ButtonStyle {
+    var prominent: Bool
+    var tint: Color
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .background {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(prominent ? tint.opacity(0.22) : Theme.cardTint)
+            }
+            .appGlassCard(cornerRadius: 12)
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(tint.opacity(prominent ? 0.34 : 0.18), lineWidth: 0.8)
+            }
+            .shadow(color: tint.opacity(prominent ? 0.22 : 0.10), radius: prominent ? 12 : 8, y: 5)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .saturation(isEnabled ? 1 : 0.25)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.88 : 1) : 0.48)
+            .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
+            .animation(.easeOut(duration: 0.14), value: isEnabled)
     }
 }
 

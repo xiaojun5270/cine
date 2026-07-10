@@ -6,6 +6,9 @@ on:
     tags:
       - "ipa-*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-15
@@ -47,6 +50,27 @@ jobs:
           name: xcodebuild-log
           path: xcodebuild.log
           if-no-files-found: ignore
+
+      - name: Publish build log branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/ci-build-logs
+          cd /tmp/ci-build-logs
+          git init -b ci-build-logs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git fetch origin ci-build-logs || true
+          if git rev-parse --verify origin/ci-build-logs; then
+            git checkout -B ci-build-logs origin/ci-build-logs
+          fi
+          mkdir -p "runs/${GITHUB_RUN_ID}"
+          cp "${GITHUB_WORKSPACE}/xcodebuild.log" "runs/${GITHUB_RUN_ID}/xcodebuild.log"
+          git add "runs/${GITHUB_RUN_ID}/xcodebuild.log"
+          git commit -m "Add build log for ${GITHUB_RUN_ID}" || true
+          git push origin ci-build-logs
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4

@@ -75,11 +75,15 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(session.username ?? "用户")
                         .font(.title3.bold())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
                     Text(session.server?.displayString ?? "未连接服务器")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
+                .layoutPriority(1)
                 Spacer()
                 GlassPill("在线", systemImage: "checkmark.circle.fill", tint: Theme.success)
             }
@@ -101,9 +105,17 @@ struct SettingsView: View {
         HStack(spacing: 12) {
             IconBadge(systemImage: icon, tint: tint, size: 38, cornerRadius: 12)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.82)
+                    .allowsTightening(true)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
+            .layoutPriority(1)
             Spacer()
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.bold))

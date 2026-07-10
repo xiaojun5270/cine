@@ -134,11 +134,20 @@ struct SubscriptionsView: View {
                               tint: source.enabled ? Theme.accent : .gray,
                               size: 42)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(source.name).font(.headline).lineLimit(1)
+                        Text(source.name)
+                            .font(.headline)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.82)
+                            .allowsTightening(true)
                         if !source.rssURL.isEmpty {
-                            Text(source.rssURL).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            Text(source.rssURL)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.76)
                         }
                     }
+                    .layoutPriority(1)
                     Spacer()
                     GlassPill(source.enabled ? "启用" : "停用",
                               systemImage: source.enabled ? "checkmark.circle.fill" : "pause.circle",

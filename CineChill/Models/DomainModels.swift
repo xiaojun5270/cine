@@ -135,13 +135,13 @@ struct RssSource: Identifiable, Hashable {
     init?(json: JSONValue) {
         guard case .object = json else { return nil }
         raw = json
-        id = json.firstString("id", "source_id", "_id") ?? UUID().uuidString
-        name = json.firstString("name", "title") ?? "未命名订阅"
-        rssURL = json.firstString("rss_url", "url") ?? ""
-        mediaType = json.firstString("media_type", "type") ?? "tv"
-        subscriptionTarget = json.firstString("subscription_target", "target") ?? "moviepilot"
-        cron = json.firstString("cron", "schedule") ?? ""
-        enabled = json["enabled"].bool ?? true
+        id = json.firstString("id", "source_id", "sourceId", "_id", "key") ?? UUID().uuidString
+        name = json.firstString("name", "title", "source_name", "sourceName", "label") ?? "未命名订阅"
+        rssURL = json.firstString("rss_url", "rssUrl", "feed_url", "feedUrl", "url", "link") ?? ""
+        mediaType = json.firstString("media_type", "mediaType", "content_type", "contentType", "type") ?? "tv"
+        subscriptionTarget = json.firstString("subscription_target", "subscriptionTarget", "target", "target_server", "targetServer") ?? "moviepilot"
+        cron = json.firstString("cron", "cron_expr", "cronExpr", "schedule", "interval") ?? ""
+        enabled = json["enabled"].bool ?? json["is_enabled"].bool ?? json["isEnabled"].bool ?? json["active"].bool ?? true
     }
 
     var typeLabel: String { mediaType == "tv" ? "剧集" : "电影" }
@@ -171,12 +171,12 @@ struct TaskItem: Identifiable, Hashable {
     init?(json: JSONValue) {
         guard case .object = json else { return nil }
         raw = json
-        id = json.firstString("id", "task_id", "_id", "name") ?? UUID().uuidString
-        name = json.firstString("name", "title", "task_name") ?? "任务"
-        type = json.firstString("type", "task_type", "category")
-        enabled = json["enabled"].bool ?? json["active"].bool ?? true
-        status = json.firstString("status", "state")
-        cron = json.firstString("cron", "schedule")
+        id = json.firstString("id", "task_id", "taskId", "_id", "key", "name") ?? UUID().uuidString
+        name = json.firstString("name", "title", "task_name", "taskName", "display_name", "displayName") ?? "任务"
+        type = json.firstString("type", "task_type", "taskType", "category", "content_type", "contentType", "mode")
+        enabled = json["enabled"].bool ?? json["is_enabled"].bool ?? json["isEnabled"].bool ?? json["active"].bool ?? true
+        status = json.firstString("status", "state", "last_status", "lastStatus", "run_state", "runState")
+        cron = json.firstString("cron", "cron_expr", "cronExpr", "schedule", "interval")
     }
 }
 
@@ -191,8 +191,8 @@ struct NotifyChannel: Identifiable, Hashable {
     init?(json: JSONValue) {
         guard case .object = json else { return nil }
         raw = json
-        id = json.firstString("key", "id", "name", "channel") ?? UUID().uuidString
-        name = json.firstString("name", "label", "title", "channel_name") ?? id
-        enabled = json["enabled"].bool ?? false
+        id = json.firstString("key", "id", "name", "channel", "channel_key", "channelKey") ?? UUID().uuidString
+        name = json.firstString("name", "label", "title", "channel_name", "channelName", "display_name", "displayName") ?? id
+        enabled = json["enabled"].bool ?? json["is_enabled"].bool ?? json["isEnabled"].bool ?? json["active"].bool ?? false
     }
 }

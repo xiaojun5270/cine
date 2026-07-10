@@ -7,8 +7,8 @@ struct TaskService {
 
     func listTasks() async throws -> [TaskItem] {
         let json = try await client.request(.get, "/api/tasks")
-        let arr = json.array ?? json["tasks"].array ?? json["items"].array ?? json["data"].array ?? []
-        return arr.compactMap { TaskItem(json: $0) }
+        return json.items("saved_tasks", "savedTasks")
+            .compactMap { TaskItem(json: $0) }
     }
 
     func progress() async throws -> JSONValue {

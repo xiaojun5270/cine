@@ -112,6 +112,7 @@ struct IconBadge: View {
                 .foregroundStyle(.white)
         }
         .frame(width: size, height: size)
+        .fixedSize()
         .shadow(color: tint.opacity(0.28), radius: 14, y: 8)
     }
 }
@@ -130,8 +131,15 @@ struct GlassPill: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            if let systemImage { Image(systemName: systemImage) }
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .frame(width: 13)
+            }
             Text(title)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+                .allowsTightening(true)
+                .layoutPriority(1)
         }
         .font(.footnote.weight(.semibold))
         .padding(.horizontal, 12)
@@ -163,16 +171,26 @@ struct SectionHeader: View {
                     Capsule(style: .continuous)
                         .fill(Theme.accent)
                         .frame(width: 4, height: 18)
-                    Text(title).font(.title3.bold())
+                    Text(title)
+                        .font(.title3.bold())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                        .allowsTightening(true)
                 }
                 if let subtitle {
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
             }
+            .layoutPriority(1)
             Spacer()
             if let actionTitle, let action {
                 Button(actionTitle, action: action)
                     .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                     .tint(Theme.accent)
             }
         }

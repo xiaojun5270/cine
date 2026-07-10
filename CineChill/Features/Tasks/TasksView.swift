@@ -164,11 +164,19 @@ struct TasksView: View {
                               tint: task.enabled ? Theme.accent : .gray,
                               size: 42)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(task.name).font(.headline).lineLimit(1)
+                        Text(task.name)
+                            .font(.headline)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.82)
+                            .allowsTightening(true)
                         if let status = task.status {
-                            Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            Text(status)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
                         }
                     }
+                    .layoutPriority(1)
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { task.enabled },

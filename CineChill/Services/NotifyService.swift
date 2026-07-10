@@ -7,8 +7,8 @@ struct NotifyService {
 
     func channels() async throws -> [NotifyChannel] {
         let json = try await client.request(.get, "/api/notify/channels")
-        let arr = json.array ?? json["channels"].array ?? json["items"].array ?? json["data"].array ?? []
-        return arr.compactMap { NotifyChannel(json: $0) }
+        return json.items("notify_channels", "notifyChannels")
+            .compactMap { NotifyChannel(json: $0) }
     }
 
     func types() async throws -> JSONValue {

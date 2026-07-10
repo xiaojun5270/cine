@@ -53,7 +53,14 @@ enum JSONValue: Codable, Hashable, Sendable {
     subscript(dynamicMember key: String) -> JSONValue { self[key] }
 
     subscript(key: String) -> JSONValue {
-        if case .object(let dict) = self { return dict[key] ?? .null }
+        if case .object(let dict) = self {
+            if let exact = dict[key] { return exact }
+            let wanted = Self.normalizedKey(key)
+            if let match = dict.first(where: { Self.normalizedKey($0.key) == wanted }) {
+                return match.value
+            }
+            return .null
+        }
         return .null
     }
 
@@ -366,11 +373,39 @@ extension JSONValue {
 
     /// Extracts an array of items from common container shapes.
     func items(_ extraKeys: String...) -> [JSONValue] {
+        items(extraKeys: extraKeys)
+    }
+
+    private func items(extraKeys: [String]) -> [JSONValue] {
         if let a = array { return a }
-        for k in ["items", "results", "data", "list", "tasks", "records", "containers", "images", "users", "entries", "sources", "presets", "reminders", "audit", "history"] + extraKeys {
+
+        if case .string(let string) = self,
+           let parsed = try? JSONValue.parse(string) {
+            return parsed.items(extraKeys: extraKeys)
+        }
+
+        let keys = [
+            "items", "results", "data", "list", "rows", "records", "entries", "values",
+            "tasks", "sources", "channels", "users", "containers", "images", "presets",
+            "reminders", "audit", "history", "subscriptions", "feeds", "subjects"
+        ] + extraKeys
+
+        for k in keys {
             if let a = self[k].array { return a }
         }
-        if let a = self["data"]["items"].array { return a }
+
+        for wrapper in ["data", "result", "results", "payload", "response", "body"] {
+            let nested = self[wrapper]
+            if !nested.isNull {
+                let found = nested.items(extraKeys: extraKeys)
+                if !found.isEmpty { return found }
+            }
+        }
+
+        if let object {
+            let arrays = object.values.compactMap(\.array)
+            if arrays.count == 1 { return arrays[0] }
+        }
         return []
     }
 }

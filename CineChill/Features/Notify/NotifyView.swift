@@ -145,11 +145,17 @@ struct NotifyView: View {
                                                   tint: channel.enabled ? Theme.accent : .gray,
                                                   size: 38)
                                         VStack(alignment: .leading, spacing: 3) {
-                                            Text(channel.name).font(.subheadline.weight(.semibold))
+                                            Text(channel.name)
+                                                .font(.subheadline.weight(.semibold))
+                                                .lineLimit(2)
+                                                .minimumScaleFactor(0.82)
+                                                .allowsTightening(true)
                                             Text(channel.enabled ? "可用于发送通知" : "当前未启用")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
+                                                .lineLimit(2)
                                         }
+                                        .layoutPriority(1)
                                         Spacer()
                                         GlassPill(channel.enabled ? "已启用" : "未启用",
                                                   systemImage: channel.enabled ? "checkmark.circle.fill" : "pause.circle",
@@ -293,11 +299,15 @@ struct NotifyView: View {
                           tint: connected ? Theme.accent : .gray,
                           size: 46)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(title).font(.headline)
+                    Text(title)
+                        .font(.headline)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.82)
                     GlassPill(connected ? "已连接" : "未连接",
                               systemImage: connected ? "checkmark.circle.fill" : "exclamationmark.circle",
                               tint: connected ? Theme.success : .gray)
                 }
+                .layoutPriority(1)
                 Spacer()
                 Button("测试") { Task { await test() } }
                     .appGlassButtonStyle().controlSize(.small).tint(Theme.accent)

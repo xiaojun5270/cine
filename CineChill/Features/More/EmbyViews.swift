@@ -80,11 +80,20 @@ struct EmbyUsersView: View {
                               tint: disabled ? .gray : Theme.accent,
                               size: 38)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(name).font(.headline).lineLimit(1)
+                        Text(name)
+                            .font(.headline)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.82)
+                            .allowsTightening(true)
                         if !id.isEmpty {
-                            Text(id).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                            Text(id)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.75)
                         }
                     }
+                    .layoutPriority(1)
                     Spacer()
                     GlassPill(disabled ? "已禁用" : "启用中",
                               systemImage: disabled ? "pause.circle" : "checkmark.circle.fill",
@@ -246,7 +255,12 @@ struct EmbyTasksView: View {
                 GlassCard {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text(name).font(.subheadline.weight(.medium)).lineLimit(1)
+                            Text(name)
+                                .font(.subheadline.weight(.medium))
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.82)
+                                .allowsTightening(true)
+                                .layoutPriority(1)
                             Spacer()
                             if let state { GlassPill(state, systemImage: "info.circle") }
                         }

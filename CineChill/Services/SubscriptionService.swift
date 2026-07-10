@@ -7,8 +7,8 @@ struct SubscriptionService {
 
     func listSources() async throws -> [RssSource] {
         let json = try await client.request(.get, "/api/subscriptions/rss_sources")
-        let arr = json.array ?? json["items"].array ?? json["sources"].array ?? json["data"].array ?? []
-        return arr.compactMap { RssSource(json: $0) }
+        return json.items("rss_sources", "rssSources")
+            .compactMap { RssSource(json: $0) }
     }
 
     @discardableResult

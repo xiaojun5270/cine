@@ -54,15 +54,15 @@ struct JSONKeyValueCard: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let title { Text(title).font(.headline) }
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                    HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(row.0)
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.secondary)
-                        Spacer(minLength: 12)
                         Text(row.1)
                             .font(.caption)
-                            .multilineTextAlignment(.trailing)
-                            .lineLimit(3)
+                            .textSelection(.enabled)
+                            .lineLimit(4)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     Divider().opacity(0.15)
                 }
@@ -160,24 +160,24 @@ struct ModuleActionButton: View {
     let action: () -> Void
 
     var body: some View {
-        Group {
-            if prominent {
-                Button(role: role, action: action) {
-                    Label(title, systemImage: systemImage)
-                        .labelStyle(.titleAndIcon)
-                }
-                .appGlassButtonStyle(prominent: true)
-            } else {
-                Button(role: role, action: action) {
-                    Label(title, systemImage: systemImage)
-                        .labelStyle(.titleAndIcon)
-                }
-                .appGlassButtonStyle()
+        Button(role: role, action: action) {
+            VStack(spacing: 5) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(height: 15)
+                Text(title)
+                    .font(.caption2.weight(.semibold))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.78)
+                    .allowsTightening(true)
             }
+            .frame(maxWidth: .infinity, minHeight: 42)
+            .padding(.horizontal, 4)
+            .contentShape(Rectangle())
         }
-        .controlSize(.small)
+        .appGlassButtonStyle(prominent: prominent)
         .tint(Theme.accent)
-        .font(.caption.weight(.semibold))
         .symbolRenderingMode(.hierarchical)
     }
 }

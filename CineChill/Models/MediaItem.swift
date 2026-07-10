@@ -61,17 +61,7 @@ extension MediaItem {
     /// Extracts a list of media items from a variety of container shapes:
     /// a bare array, or an object wrapping `items`/`results`/`data`/`list`.
     static func list(from json: JSONValue, defaultType: String = "movie") -> [MediaItem] {
-        let arrays: [[JSONValue]?] = [
-            json.array,
-            json["items"].array,
-            json["results"].array,
-            json["data"].array,
-            json["list"].array,
-            json["subjects"].array,
-            json["data"]["items"].array,
-            json["data"]["results"].array
-        ]
-        let source = arrays.compactMap { $0 }.first ?? []
-        return source.compactMap { MediaItem(json: $0, defaultType: defaultType) }
+        json.items("subjects", "movies", "tv", "media", "contents")
+            .compactMap { MediaItem(json: $0, defaultType: defaultType) }
     }
 }

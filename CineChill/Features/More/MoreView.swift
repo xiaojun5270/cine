@@ -4,7 +4,6 @@ import SwiftUI
 struct MoreView: View {
     private enum Route: Hashable {
         case settings
-        case notify
         case embyUsers
         case embyTasks
         case mediaOrganize
@@ -45,8 +44,7 @@ struct MoreView: View {
     private var groups: [Group] {
         [
             Group(header: "账户", items: [
-                Item(title: "设置", subtitle: "账号与服务器", icon: "gearshape.fill", tint: .gray, route: .settings),
-                Item(title: "通知配置", subtitle: "Telegram / 企业微信", icon: "bell.badge.fill", tint: Theme.accentPink, route: .notify)
+                Item(title: "设置", subtitle: "账号、通知与服务器", icon: "gearshape.fill", tint: .gray, route: .settings)
             ]),
             Group(header: "媒体库", items: [
                 Item(title: "Emby 用户", subtitle: "权限与密码", icon: "person.2.fill", tint: Theme.success, route: .embyUsers),
@@ -127,6 +125,7 @@ struct MoreView: View {
                         GlassPill("Liquid Glass", systemImage: "sparkles", tint: Theme.accentBlue)
                     }
                 }
+                .layoutPriority(1)
                 Spacer(minLength: 0)
             }
         }
@@ -136,7 +135,6 @@ struct MoreView: View {
     private func destination(for route: Route) -> some View {
         switch route {
         case .settings: SettingsView()
-        case .notify: NotifyView()
         case .embyUsers: EmbyUsersView()
         case .embyTasks: EmbyTasksView()
         case .mediaOrganize: MediaOrganizeView()
@@ -163,16 +161,19 @@ struct MoreView: View {
     private func tile(_ item: Item) -> some View {
         GlassCard {
             HStack(spacing: 12) {
-                IconBadge(systemImage: item.icon, tint: item.tint, size: 42)
+                IconBadge(systemImage: item.icon, tint: item.tint, size: 38)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
                         .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.82)
+                        .allowsTightening(true)
                     Text(item.subtitle)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .lineLimit(2)
                 }
+                .layoutPriority(1)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.bold))

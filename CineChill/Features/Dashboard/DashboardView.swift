@@ -26,6 +26,7 @@ struct DashboardView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("首页")
+            .appLiquidNavigationChrome()
             .refreshable { await model.load() }
             .task { if model.stats == nil { await model.load() } }
         }

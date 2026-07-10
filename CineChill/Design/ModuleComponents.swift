@@ -34,6 +34,7 @@ struct ModuleScaffold<Content: View>: View {
         .background(Theme.backgroundGradient.ignoresSafeArea())
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .appLiquidNavigationChrome()
         .toolbar {
             if let toolbarContent {
                 ToolbarItem(placement: .topBarTrailing) { toolbarContent }
@@ -135,6 +136,10 @@ struct ModuleActionButton: View {
 
 /// Simple toast/alert bound to an optional message string.
 extension View {
+    func appLiquidNavigationChrome() -> some View {
+        toolbarBackground(.visible, for: .navigationBar)
+    }
+
     func toast(_ message: Binding<String?>) -> some View {
         alert("提示", isPresented: Binding(
             get: { message.wrappedValue != nil },

@@ -57,6 +57,7 @@ struct SettingsView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("设置")
+            .appLiquidNavigationChrome()
             .sheet(isPresented: $showChangePassword) { ChangePasswordView() }
             .confirmationDialog("确定退出登录？", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
                 Button("退出登录", role: .destructive) { session.logout() }
@@ -107,6 +108,7 @@ struct ChangePasswordView: View {
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("修改账号")
             .navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {

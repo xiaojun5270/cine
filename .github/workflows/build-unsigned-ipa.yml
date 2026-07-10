@@ -11,11 +11,24 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          set -e
+          if [ -d /Applications/Xcode_26.app ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app
+          elif [ -d /Applications/Xcode_26.0.app ]; then
+            sudo xcode-select -s /Applications/Xcode_26.0.app
+          else
+            echo "Xcode 26 is required for native Liquid Glass and iOS 26 SDK."
+            ls -1 /Applications | grep Xcode || true
+            exit 1
+          fi
 
       - name: Show Xcode version
         run: |

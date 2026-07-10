@@ -69,6 +69,7 @@ struct EmbyUsersView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("创建用户").navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { showCreate = false } }
                 ToolbarItem(placement: .confirmationAction) {
@@ -183,5 +184,6 @@ private func detailSheet(title: String, json: JSONValue?) -> some View {
         .background(Theme.backgroundGradient.ignoresSafeArea())
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .appLiquidNavigationChrome()
     }
 }

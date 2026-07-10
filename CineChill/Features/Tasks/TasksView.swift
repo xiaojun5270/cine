@@ -45,6 +45,7 @@ struct TasksView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("任务")
+            .appLiquidNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -189,5 +190,6 @@ private struct TaskJSONSheet: View {
         .background(Theme.backgroundGradient.ignoresSafeArea())
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .appLiquidNavigationChrome()
     }
 }

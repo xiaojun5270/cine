@@ -5,7 +5,6 @@
 ## 运行环境
 
 - **Xcode 26 + iOS 26+**：启用原生 Liquid Glass 导航栏、标签栏、按钮与卡片效果
-- **Xcode 16 + iOS 17+**：可兼容编译运行，但使用项目内 Material 玻璃兜底样式
 - 一个可访问的 CineChill 服务端（`http://<服务器IP>:5256`）
 
 ## 打开与运行
@@ -25,7 +24,7 @@
 | 卡片 / 药丸 / 圆形头像 | iOS 26 `.glassEffect(.regular, in:)` / `.glassEffect(.regular.tint(_).interactive(), in:)` |
 | 按钮 | iOS 26 `.buttonStyle(.glass)` / `.buttonStyle(.glassProminent)` |
 | 搜索 | `.searchable` + `.searchScopes` |
-| 导航栏 / 工具栏 | iOS 26 系统自动 Liquid Glass；旧 SDK 下走兼容样式 |
+| 导航栏 / 工具栏 | iOS 26 系统自动 Liquid Glass |
 
 ## 架构
 
@@ -63,6 +62,8 @@ CineChill/
 | **Docker / 系统健康 / AI 剧集识别 / 飞牛签到 / Webhook / 检查更新** | 更多›系统与运维 | `docker/*`、`system_health/*`、`ai-episode-resolver/*`、`fnos_sign/*`、`webhook/*`、`upgrade/*` |
 
 > 每个分组都有对应的 `Service`（`Services/`）封装其接口，UI 覆盖各模块的核心读操作与主要动作（增删改 / 运行 / 停止 / 测试等）。少数极少用的高级参数接口已在 Service 层就绪，可按需在视图中补充按钮。
+
+`更多 → 系统与运维 → 接口总控` 已内置接口文档中的 305 个端点，可搜索、填 path/query/body 参数并直接执行，作为全部高级接口的移动端兜底入口。
 
 ## 网络层用法示例
 

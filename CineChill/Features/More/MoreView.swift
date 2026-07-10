@@ -47,7 +47,8 @@ struct MoreView: View {
                 Item(title: "AI 剧集识别", icon: "brain.head.profile", tint: Theme.accent, destination: AnyView(AIResolverView())),
                 Item(title: "飞牛签到", icon: "checkmark.seal.fill", tint: .mint, destination: AnyView(FnosSignView())),
                 Item(title: "Webhook", icon: "bolt.horizontal.circle.fill", tint: .yellow, destination: AnyView(WebhookView())),
-                Item(title: "检查更新", icon: "arrow.down.circle.fill", tint: .indigo, destination: AnyView(UpgradeView()))
+                Item(title: "检查更新", icon: "arrow.down.circle.fill", tint: .indigo, destination: AnyView(UpgradeView())),
+                Item(title: "接口总控", icon: "point.3.connected.trianglepath.dotted", tint: Theme.accentWarm, destination: AnyView(APIConsoleView()))
             ])
         ]
     }
@@ -76,6 +77,7 @@ struct MoreView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("更多")
+            .appLiquidNavigationChrome()
         }
     }
 

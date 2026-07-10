@@ -77,6 +77,7 @@ struct Config302View: View {
                 }
                 .background(Theme.backgroundGradient.ignoresSafeArea())
                 .navigationTitle(detailTitle).navigationBarTitleDisplayMode(.inline)
+                .appLiquidNavigationChrome()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showDetail = false } } }
             }
         }

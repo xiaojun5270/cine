@@ -30,90 +30,29 @@ struct AppGlassButtonStyle: ButtonStyle {
 }
 
 extension View {
-    @ViewBuilder
     func appGlassCard(cornerRadius: CGFloat = Theme.cardCorner) -> some View {
-        #if compiler(>=6.2)
-        if #available(iOS 26.0, *) {
-            glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
-        } else {
-            appFallbackGlassCard(cornerRadius: cornerRadius)
-        }
-        #else
-        appFallbackGlassCard(cornerRadius: cornerRadius)
-        #endif
+        glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
     }
 
-    @ViewBuilder
     func appGlassCircle() -> some View {
-        #if compiler(>=6.2)
-        if #available(iOS 26.0, *) {
-            glassEffect(.regular, in: .circle)
-        } else {
-            appFallbackGlassCircle()
-        }
-        #else
-        appFallbackGlassCircle()
-        #endif
+        glassEffect(.regular, in: .circle)
     }
 
-    @ViewBuilder
     func appGlassCapsule(tint: Color = Theme.accent) -> some View {
-        #if compiler(>=6.2)
-        if #available(iOS 26.0, *) {
-            glassEffect(.regular.tint(tint.opacity(0.22)).interactive(), in: .capsule)
-        } else {
-            appFallbackGlassCapsule(tint: tint)
-        }
-        #else
-        appFallbackGlassCapsule(tint: tint)
-        #endif
+        glassEffect(.regular.tint(tint.opacity(0.22)).interactive(), in: .capsule)
     }
 
     @ViewBuilder
     func appGlassButtonStyle(prominent: Bool = false) -> some View {
-        #if compiler(>=6.2)
-        if #available(iOS 26.0, *) {
-            if prominent {
-                buttonStyle(.glassProminent)
-            } else {
-                buttonStyle(.glass)
-            }
+        if prominent {
+            buttonStyle(.glassProminent)
         } else {
-            buttonStyle(AppGlassButtonStyle(prominent: prominent))
+            buttonStyle(.glass)
         }
-        #else
-        buttonStyle(AppGlassButtonStyle(prominent: prominent))
-        #endif
-    }
-
-    private func appFallbackGlassCard(cornerRadius: CGFloat) -> some View {
-        background(.ultraThinMaterial, in: .rect(cornerRadius: cornerRadius))
-            .overlay {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(.white.opacity(0.14), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.16), radius: 18, y: 10)
-    }
-
-    private func appFallbackGlassCircle() -> some View {
-        background(.ultraThinMaterial, in: .circle)
-            .overlay {
-                Circle().stroke(.white.opacity(0.16), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.14), radius: 14, y: 7)
-    }
-
-    private func appFallbackGlassCapsule(tint: Color) -> some View {
-        background(tint.opacity(0.14), in: .capsule)
-            .background(.ultraThinMaterial, in: .capsule)
-            .overlay {
-                Capsule(style: .continuous)
-                    .stroke(tint.opacity(0.22), lineWidth: 1)
-            }
     }
 }
 
-/// A rounded content card rendered with a compatible glass-style material.
+/// A rounded content card rendered with native Liquid Glass.
 struct GlassCard<Content: View>: View {
     var cornerRadius: CGFloat = Theme.cardCorner
     @ViewBuilder var content: Content

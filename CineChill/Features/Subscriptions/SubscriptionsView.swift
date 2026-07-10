@@ -43,6 +43,7 @@ struct SubscriptionsView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("订阅")
+            .appLiquidNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -103,6 +104,7 @@ struct SubscriptionsView: View {
                     .background(Theme.backgroundGradient.ignoresSafeArea())
                     .navigationTitle(panel.title)
                     .navigationBarTitleDisplayMode(.inline)
+                    .appLiquidNavigationChrome()
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { self.panel = nil } } }
                 }
             }

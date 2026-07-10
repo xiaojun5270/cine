@@ -54,6 +54,7 @@ struct MediaDetailView: View {
         .background(Theme.backgroundGradient.ignoresSafeArea())
         .navigationTitle(item.title)
         .navigationBarTitleDisplayMode(.inline)
+        .appLiquidNavigationChrome()
         .task { await loadDetail() }
     }
 

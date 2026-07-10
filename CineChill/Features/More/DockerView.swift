@@ -41,6 +41,7 @@ struct DockerView: View {
                 }
                 .background(Theme.backgroundGradient.ignoresSafeArea())
                 .navigationTitle("容器日志").navigationBarTitleDisplayMode(.inline)
+                .appLiquidNavigationChrome()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showLogs = false } } }
             }
         }
@@ -56,6 +57,7 @@ struct DockerView: View {
                 }
                 .background(Theme.backgroundGradient.ignoresSafeArea())
                 .navigationTitle("操作结果").navigationBarTitleDisplayMode(.inline)
+                .appLiquidNavigationChrome()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showResult = false } } }
             }
         }

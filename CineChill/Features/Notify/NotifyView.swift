@@ -111,6 +111,7 @@ struct NotifyView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.backgroundGradient.ignoresSafeArea())
         .navigationTitle("通知")
+        .appLiquidNavigationChrome()
         .refreshable { await model.load() }
         .task { if model.channels.isEmpty { await model.load() } }
         .alert("提示", isPresented: Binding(

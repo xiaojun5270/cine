@@ -16,6 +16,7 @@ struct DiscoverView: View {
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("发现")
+            .appLiquidNavigationChrome()
             .navigationDestination(for: MediaItem.self) { MediaDetailView(item: $0) }
             .searchable(text: $model.searchText, prompt: "搜索电影、剧集")
             .searchScopes($model.searchType) {

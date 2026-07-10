@@ -44,6 +44,7 @@ struct RssSourceEditor: View {
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle(source == nil ? "新增订阅" : "编辑订阅")
             .navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }

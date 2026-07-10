@@ -111,6 +111,7 @@ struct RssView: View {
                 }
                 .background(Theme.backgroundGradient.ignoresSafeArea())
                 .navigationTitle("链接预设").navigationBarTitleDisplayMode(.inline)
+                .appLiquidNavigationChrome()
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("关闭") { showPresets = false } } }
             }
         }

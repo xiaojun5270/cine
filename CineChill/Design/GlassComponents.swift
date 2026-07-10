@@ -30,7 +30,63 @@ struct AppGlassButtonStyle: ButtonStyle {
 }
 
 extension View {
+    @ViewBuilder
     func appGlassCard(cornerRadius: CGFloat = Theme.cardCorner) -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+        } else {
+            appFallbackGlassCard(cornerRadius: cornerRadius)
+        }
+        #else
+        appFallbackGlassCard(cornerRadius: cornerRadius)
+        #endif
+    }
+
+    @ViewBuilder
+    func appGlassCircle() -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            glassEffect(.regular, in: .circle)
+        } else {
+            appFallbackGlassCircle()
+        }
+        #else
+        appFallbackGlassCircle()
+        #endif
+    }
+
+    @ViewBuilder
+    func appGlassCapsule(tint: Color = Theme.accent) -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            glassEffect(.regular.tint(tint.opacity(0.22)).interactive(), in: .capsule)
+        } else {
+            appFallbackGlassCapsule(tint: tint)
+        }
+        #else
+        appFallbackGlassCapsule(tint: tint)
+        #endif
+    }
+
+    @ViewBuilder
+    func appGlassButtonStyle(prominent: Bool = false) -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            if prominent {
+                buttonStyle(.glassProminent)
+            } else {
+                buttonStyle(.glass)
+            }
+        } else {
+            buttonStyle(AppGlassButtonStyle(prominent: prominent))
+        }
+        #else
+        buttonStyle(AppGlassButtonStyle(prominent: prominent))
+        #endif
+    }
+
+    private func appFallbackGlassCard(cornerRadius: CGFloat) -> some View {
         background(.ultraThinMaterial, in: .rect(cornerRadius: cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
@@ -39,7 +95,7 @@ extension View {
             .shadow(color: .black.opacity(0.16), radius: 18, y: 10)
     }
 
-    func appGlassCircle() -> some View {
+    private func appFallbackGlassCircle() -> some View {
         background(.ultraThinMaterial, in: .circle)
             .overlay {
                 Circle().stroke(.white.opacity(0.16), lineWidth: 1)
@@ -47,7 +103,7 @@ extension View {
             .shadow(color: .black.opacity(0.14), radius: 14, y: 7)
     }
 
-    func appGlassCapsule(tint: Color = Theme.accent) -> some View {
+    private func appFallbackGlassCapsule(tint: Color) -> some View {
         background(tint.opacity(0.14), in: .capsule)
             .background(.ultraThinMaterial, in: .capsule)
             .overlay {
@@ -138,7 +194,7 @@ struct GlassPrimaryButton: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
         }
-        .buttonStyle(AppGlassButtonStyle(prominent: true))
+        .appGlassButtonStyle(prominent: true)
         .tint(Theme.accent)
         .disabled(isLoading)
     }
@@ -186,7 +242,7 @@ struct ErrorStateView: View {
                 .padding(.horizontal, 32)
             if let retry {
                 Button("重试", action: retry)
-                    .buttonStyle(AppGlassButtonStyle())
+                    .appGlassButtonStyle()
                     .tint(Theme.accent)
             }
         }

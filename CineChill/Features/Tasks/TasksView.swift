@@ -54,13 +54,13 @@ struct TasksView: View {
                     Button { Task { await model.run(task) } } label: {
                         Label("运行", systemImage: "play.fill")
                     }
-                    .buttonStyle(AppGlassButtonStyle(prominent: true)).tint(Theme.accent).controlSize(.small)
+                    .appGlassButtonStyle(prominent: true).tint(Theme.accent).controlSize(.small)
                     .disabled(model.runningIDs.contains(task.id))
 
                     Button { Task { await model.stop(task) } } label: {
                         Label("停止", systemImage: "stop.fill")
                     }
-                    .buttonStyle(AppGlassButtonStyle()).controlSize(.small)
+                    .appGlassButtonStyle().controlSize(.small)
                     Spacer()
                 }
                 .font(.caption.weight(.semibold))

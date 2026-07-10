@@ -1,11 +1,11 @@
 # CineChill Mobile (iOS)
 
-基于 **CineChill 移动端 API 接口文档 v1.0.0.43** 开发的原生 iOS 客户端，采用 **SwiftUI + 兼容式玻璃质感** 设计语言。
+基于 **CineChill 移动端 API 接口文档 v1.0.0.43** 开发的原生 iOS 客户端，采用 **SwiftUI + iOS 26 Liquid Glass（液态玻璃）** 设计语言。
 
 ## 运行环境
 
-- **Xcode 16** 或更高
-- **iOS 17+**（真机或模拟器）
+- **Xcode 26 + iOS 26+**：启用原生 Liquid Glass 导航栏、标签栏、按钮与卡片效果
+- **Xcode 16 + iOS 17+**：可兼容编译运行，但使用项目内 Material 玻璃兜底样式
 - 一个可访问的 CineChill 服务端（`http://<服务器IP>:5256`）
 
 ## 打开与运行
@@ -17,15 +17,15 @@
 
 > 工程已在 `Info.plist` 开启 `NSAllowsArbitraryLoads`，以便连接本地 HTTP 服务。
 
-## 玻璃质感实现
+## Liquid Glass 实现
 
 | 位置 | 实现 |
 |---|---|
-| 底部标签栏 | 原生 `TabView` + `.tabItem` / `.tag` |
-| 卡片 / 药丸 / 圆形头像 | `GlassCard`、`GlassPill`、`appGlassCircle()`，基于 `Material` 和 shape overlay |
-| 按钮 | `AppGlassButtonStyle` / `GlassPrimaryButton` |
+| 底部标签栏 | iOS 26 原生 `TabView` + `Tab(value:)` + `.tabBarMinimizeBehavior(.onScrollDown)` |
+| 卡片 / 药丸 / 圆形头像 | iOS 26 `.glassEffect(.regular, in:)` / `.glassEffect(.regular.tint(_).interactive(), in:)` |
+| 按钮 | iOS 26 `.buttonStyle(.glass)` / `.buttonStyle(.glassProminent)` |
 | 搜索 | `.searchable` + `.searchScopes` |
-| 导航栏 / 工具栏 | 系统导航与工具栏样式 |
+| 导航栏 / 工具栏 | iOS 26 系统自动 Liquid Glass；旧 SDK 下走兼容样式 |
 
 ## 架构
 
@@ -36,7 +36,7 @@ CineChill/
 │  ├─ Networking/  APIClient（Cookie 会话）、JSONValue（容错解码）、APIError
 │  ├─ Config/      ServerConfig（地址解析）
 │  └─ Session/     SessionStore（服务器→登录→主界面 状态机）
-├─ Design/         Theme、玻璃质感组件、RemoteImage
+├─ Design/         Theme、Liquid Glass 组件、RemoteImage
 ├─ Models/         MediaItem、Dashboard/RSS/Task/Notify 领域模型
 ├─ Services/       各模块接口封装（Auth/Server/Discover/Subscription/Task/Notify）
 └─ Features/       Auth / Root / Dashboard / Discover / Subscriptions / Tasks / Notify / Settings

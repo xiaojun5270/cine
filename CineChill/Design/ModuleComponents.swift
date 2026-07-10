@@ -119,12 +119,12 @@ struct ModuleActionButton: View {
                 Button(role: role, action: action) {
                     Label(title, systemImage: systemImage)
                 }
-                .buttonStyle(AppGlassButtonStyle(prominent: true))
+                .appGlassButtonStyle(prominent: true)
             } else {
                 Button(role: role, action: action) {
                     Label(title, systemImage: systemImage)
                 }
-                .buttonStyle(AppGlassButtonStyle())
+                .appGlassButtonStyle()
             }
         }
         .controlSize(.small)

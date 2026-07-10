@@ -81,19 +81,19 @@ struct SubscriptionsView: View {
                     Button { Task { await model.sync(source) } } label: {
                         Label("同步", systemImage: "arrow.triangle.2.circlepath")
                     }
-                    .buttonStyle(AppGlassButtonStyle()).tint(Theme.accent).controlSize(.small)
+                    .appGlassButtonStyle().tint(Theme.accent).controlSize(.small)
 
                     Button { editing = source; showEditor = true } label: {
                         Label("编辑", systemImage: "pencil")
                     }
-                    .buttonStyle(AppGlassButtonStyle()).controlSize(.small)
+                    .appGlassButtonStyle().controlSize(.small)
 
                     Spacer()
 
                     Button(role: .destructive) { Task { await model.delete(source) } } label: {
                         Image(systemName: "trash")
                     }
-                    .buttonStyle(AppGlassButtonStyle()).controlSize(.small)
+                    .appGlassButtonStyle().controlSize(.small)
                 }
                 .font(.caption.weight(.semibold))
             }

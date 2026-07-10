@@ -110,7 +110,7 @@ struct NotifyView: View {
                 }
                 Spacer()
                 Button("测试") { Task { await test() } }
-                    .buttonStyle(AppGlassButtonStyle()).controlSize(.small).tint(Theme.accent)
+                    .appGlassButtonStyle().controlSize(.small).tint(Theme.accent)
             }
         }
     }

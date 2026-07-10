@@ -1,0 +1,182 @@
+Command line invocation:
+    /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/xcodebuild -project CineChill.xcodeproj -scheme CineChill -configuration Release -sdk iphoneos -destination generic/platform=iOS -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= DEVELOPMENT_TEAM= clean build
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = 
+    CODE_SIGNING_ALLOWED = NO
+    CODE_SIGNING_REQUIRED = NO
+    DEVELOPMENT_TEAM = 
+    SDKROOT = iphoneos26.0
+
+note: Using codesigning identity override: 
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+** CLEAN SUCCEEDED **
+
+note: Using codesigning identity override: 
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'CineChill' in project 'CineChill' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode_26.0.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: eb2ed0f9fa40999cf134d2756d6196c0
+Build description path: /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/XCBuildData/eb2ed0f9fa40999cf134d2756d6196c0.xcbuilddata
+ClangStatCache /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_26.0.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk /Users/runner/work/cine/cine/build/DerivedData/SDKStatCaches.noindex/iphoneos26.0-23A339-3885c01c3e6b6a337905948deab2002ee897cee61435230feef45a4748fd4bcc.sdkstatcache
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_26.0.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk -o /Users/runner/work/cine/cine/build/DerivedData/SDKStatCaches.noindex/iphoneos26.0-23A339-3885c01c3e6b6a337905948deab2002ee897cee61435230feef45a4748fd4bcc.sdkstatcache
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Products
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Products
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill-2301bb2f626fed95fa8e6e785684e49b-VFS-iphoneos/all-product-headers.yaml
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill-2301bb2f626fed95fa8e6e785684e49b-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+    cd /Users/runner/work/cine/cine/CineChill.xcodeproj
+    builtin-create-build-directory /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill_const_extract_protocols.json (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.SwiftFileList (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.SwiftFileList
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.SwiftConstValuesFileList (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.LinkFileList (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.LinkFileList
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill-OutputFileMap.json (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.hmap
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.DependencyStaticMetadataFileList (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.DependencyMetadataFileList (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-project-headers.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-project-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-own-target-headers.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-generated-files.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-generated-files.hmap
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-all-target-headers.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-all-non-framework-target-headers.hmap (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    write-file /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-all-non-framework-target-headers.hmap
+
+MkDir /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    /bin/mkdir -p /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app
+
+MkDir /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/unthinned (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    /bin/mkdir -p /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/unthinned
+
+MkDir /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/thinned (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    /bin/mkdir -p /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/thinned
+
+GenerateAssetSymbols /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/actool /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets --compile /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_dependencies --output-partial-info-plist /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 26.0 --platform iphoneos --bundle-identifier com.cinechill.mobile --generate-swift-asset-symbols /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CpResource /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app/api_manifest.json /Users/runner/work/cine/cine/CineChill/Resources/api_manifest.json (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/runner/work/cine/cine/CineChill/Resources/api_manifest.json /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app
+
+CompileAssetCatalogVariant thinned /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    /Applications/Xcode_26.0.1.app/Contents/Developer/usr/bin/actool /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets --compile /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 26.0 --platform iphoneos
+/* com.apple.actool.errors */
+/Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets: error: No simulator runtime version from ["23C54", "23E254a", "23F77"] available to use with iphonesimulator SDK version 23A339
+/* com.apple.actool.compilation-results */
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_generated_info.plist_thinned
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+
+
+SwiftDriver CineChill normal arm64 com.apple.xcode.tools.swift.compiler (in target 'CineChill' from project 'CineChill')
+    cd /Users/runner/work/cine/cine
+    builtin-SwiftDriver -- /Applications/Xcode_26.0.1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name CineChill -O -whole-module-optimization -enforce-exclusivity\=checked @/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_26.0.1.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk -target arm64-apple-ios26.0 -g -module-cache-path /Users/runner/work/cine/cine/build/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos -F /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64 -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/cine/cine/build/DerivedData/SDKStatCaches.noindex/iphoneos26.0-23A339-3885c01c3e6b6a337905948deab2002ee897cee61435230feef45a4748fd4bcc.sdkstatcache -output-file-map /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/runner/work/cine/cine/build/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/runner/work/cine/cine/build/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/cine/cine/build/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-generated-files.hmap -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-own-target-headers.hmap -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-all-target-headers.hmap -Xcc -iquote -Xcc /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/CineChill-project-headers.hmap -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/cine/cine/build/DerivedData/Build/Intermediates.noindex/CineChill.build/Release-iphoneos/CineChill.build/Objects-normal/arm64/CineChill-Swift.h -working-directory /Users/runner/work/cine/cine -no-emit-module-separately-wmo
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	CompileAssetCatalogVariant thinned /Users/runner/work/cine/cine/build/DerivedData/Build/Products/Release-iphoneos/CineChill.app /Users/runner/work/cine/cine/CineChill/Resources/Assets.xcassets (in target 'CineChill' from project 'CineChill')
+	Building project CineChill with scheme CineChill and configuration Release
+(2 failures)

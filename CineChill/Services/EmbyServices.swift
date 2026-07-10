@@ -14,6 +14,9 @@ struct EmbyUsersService {
         _ = try await client.request(.post, "/api/emby/users/create",
             body: JSONValue.obj(["name": name, "template_user_id": templateUserID, "password": password]))
     }
+    func update(userID: String, _ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/emby/users/\(userID)/update", body: body)
+    }
     func delete(userID: String) async throws {
         _ = try await client.request(.delete, "/api/emby/users/\(userID)")
     }
@@ -21,8 +24,9 @@ struct EmbyUsersService {
         _ = try await client.request(.post, "/api/emby/users/\(userID)/disabled",
             body: JSONValue.obj(["disabled": disabled]))
     }
-    func setPassword(userID: String, newPassword: String, currentPassword: String?, reset: Bool) async throws {
-        _ = try await client.request(.post, "/api/emby/users/\(userID)/password",
+    @discardableResult
+    func setPassword(userID: String, newPassword: String, currentPassword: String?, reset: Bool) async throws -> JSONValue {
+        try await client.request(.post, "/api/emby/users/\(userID)/password",
             body: JSONValue.obj(["new_password": newPassword, "current_password": currentPassword, "reset_password": reset]))
     }
     func bind(userID: String) async throws {

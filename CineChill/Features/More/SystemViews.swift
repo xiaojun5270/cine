@@ -150,13 +150,31 @@ struct WebhookView: View {
     @State private var isLoading = true
     @State private var error: Error?
     @State private var toast: String?
+    @State private var rawConfigBody = ""
+    @State private var result: JSONValue?
+    @State private var showResult = false
 
     var body: some View {
         ModuleScaffold(title: "Webhook", isLoading: isLoading && config == nil, error: config == nil ? error : nil,
                        onRetry: { Task { await load() } }) {
             GlassCard {
-                GlassPrimaryButton(title: "发送测试事件", systemImage: "bolt.horizontal.circle") {
-                    Task { await trigger() }
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("配置编辑").font(.headline)
+                    TextField("Webhook 配置 JSON", text: $rawConfigBody, axis: .vertical)
+                        .lineLimit(3...8)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], alignment: .leading, spacing: 8) {
+                        ModuleActionButton(title: "测试事件", systemImage: "bolt.horizontal.circle") {
+                            Task { await trigger() }
+                        }
+                        ModuleActionButton(title: "填入当前", systemImage: "square.and.pencil") {
+                            seedConfigBody()
+                        }
+                        ModuleActionButton(title: "保存配置", systemImage: "square.and.arrow.down", prominent: true) {
+                            Task { await saveConfig() }
+                        }
+                    }
                 }
             }
             if let config { JSONKeyValueCard(title: "配置", json: config, limit: 16) }
@@ -164,6 +182,7 @@ struct WebhookView: View {
         }
         .task { await load() }
         .toast($toast)
+        .sheet(isPresented: $showResult) { JSONResultSheet(title: "Webhook 结果", json: result) }
     }
 
     private func load() async {
@@ -177,6 +196,21 @@ struct WebhookView: View {
     private func trigger() async {
         do { _ = try await service.trigger(); toast = "已发送测试事件"; await load() }
         catch { toast = error.localizedDescription }
+    }
+    private func seedConfigBody() {
+        rawConfigBody = config?.prettyJSONString() ?? """
+        {"enabled":false,"engine":"classic","preset":"","mode":"random","delete_sync_enabled":true}
+        """
+    }
+    private func saveConfig() async {
+        do {
+            guard !rawConfigBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写 Webhook 配置 JSON"])
+            }
+            result = try await service.saveConfig(try JSONValue.parse(rawConfigBody))
+            showResult = true
+            await load()
+        } catch { toast = error.localizedDescription }
     }
 }
 

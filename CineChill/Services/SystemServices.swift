@@ -72,6 +72,12 @@ struct Drive115UploadService {
     let client = APIClient.shared
     func status() async throws -> JSONValue { try await client.request(.get, "/api/drive115_upload/status") }
     func tasks() async throws -> [JSONValue] { try await client.request(.get, "/api/drive115_upload/tasks").items() }
+    func createTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/tasks", body: body)
+    }
+    func updateTask(id: String, _ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/tasks/\(id)", body: body)
+    }
     func taskStatus(id: String) async throws -> JSONValue { try await client.request(.get, "/api/drive115_upload/tasks/\(id)/status") }
     func toggle(id: String, enabled: Bool) async throws {
         _ = try await client.request(.post, "/api/drive115_upload/tasks/\(id)/toggle", body: JSONValue.obj(["enabled": enabled]))
@@ -83,16 +89,47 @@ struct Drive115UploadService {
     }
     func delete(id: String) async throws { _ = try await client.request(.delete, "/api/drive115_upload/tasks/\(id)") }
     func threadSettings() async throws -> JSONValue { try await client.request(.get, "/api/drive115_upload/thread_settings") }
+    func saveThreadSettings(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/thread_settings", body: body)
+    }
     func browse115(cid: String?) async throws -> JSONValue {
         try await client.request(.post, "/api/drive115_upload/browse115", body: JSONValue.obj(["cid": cid]))
     }
+    func browseLocal(path: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/browse_local",
+                                 body: JSONValue.obj(["path": path.isEmpty ? "/" : path]))
+    }
+    func browseCloud(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/cloud/browse", body: body)
+    }
+    func rapidTransfer(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/cloud/rapid_transfer", body: body)
+    }
+    func cloudJob(id: String) async throws -> JSONValue {
+        try await client.request(.get, "/api/drive115_upload/cloud/jobs/\(id)")
+    }
+    func cancelCloudJob(id: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/cloud/jobs/\(id)/cancel")
+    }
     func clearHistory() async throws { _ = try await client.request(.post, "/api/drive115_upload/history/clear") }
+    func deleteHistory(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/history/delete", body: body)
+    }
+    func clearTaskHistory(id: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_upload/tasks/\(id)/clear_history")
+    }
 }
 
 /// Drive115Cleanup group.
 struct Drive115CleanupService {
     let client = APIClient.shared
     func tasks() async throws -> [JSONValue] { try await client.request(.get, "/api/drive115_cleanup/tasks").items() }
+    func createTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_cleanup/tasks", body: body)
+    }
+    func updateTask(id: String, _ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/drive115_cleanup/tasks/\(id)", body: body)
+    }
     func run(id: String) async throws { _ = try await client.request(.post, "/api/drive115_cleanup/tasks/\(id)/run") }
     func toggle(id: String, enabled: Bool) async throws {
         _ = try await client.request(.post, "/api/drive115_cleanup/tasks/\(id)/toggle", body: JSONValue.obj(["enabled": enabled]))

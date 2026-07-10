@@ -10,13 +10,22 @@ struct EmbyUsersView: View {
     @State private var newName = ""
     @State private var newPassword = ""
     @State private var detail: JSONValue?
+    @State private var detailTitle = "用户详情"
     @State private var showDetail = false
+    @State private var selectedUserID = ""
+    @State private var rawUserBody = ""
+    @State private var passwordCurrent = ""
+    @State private var passwordNew = ""
+    @State private var resetPassword = true
+
+    private let buttonColumns = [GridItem(.adaptive(minimum: 78), spacing: 8)]
 
     var body: some View {
         ModuleScaffold(title: "Emby 用户", isLoading: isLoading && users.isEmpty, error: users.isEmpty ? error : nil,
                        isEmpty: !isLoading && users.isEmpty && error == nil, emptyTitle: "暂无用户",
                        onRetry: { Task { await load() } },
                        toolbarContent: AnyView(Button { showCreate = true } label: { Image(systemName: "plus") })) {
+            userEditorCard
             ForEach(Array(users.enumerated()), id: \.offset) { _, user in
                 userCard(user)
             }
@@ -24,7 +33,40 @@ struct EmbyUsersView: View {
         .task { await load() }
         .toast($toast)
         .sheet(isPresented: $showCreate) { createSheet }
-        .sheet(isPresented: $showDetail) { detailSheet(title: "用户详情", json: detail) }
+        .sheet(isPresented: $showDetail) { detailSheet(title: detailTitle, json: detail) }
+    }
+
+    private var userEditorCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("用户编辑").font(.headline)
+                TextField("user_id", text: $selectedUserID)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("用户更新 JSON", text: $rawUserBody, axis: .vertical)
+                    .lineLimit(3...10)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                HStack(spacing: 10) {
+                    SecureField("当前密码（可选）", text: $passwordCurrent)
+                    SecureField("新密码", text: $passwordNew)
+                }
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                Toggle("重置密码", isOn: $resetPassword)
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "模板", systemImage: "doc.badge.plus") { seedUserTemplate() }
+                    ModuleActionButton(title: "保存用户", systemImage: "square.and.arrow.down", prominent: true) {
+                        Task { await updateUser() }
+                    }
+                    .disabled(selectedUserID.isEmpty)
+                    ModuleActionButton(title: "改密码", systemImage: "key") {
+                        Task { await setPassword() }
+                    }
+                    .disabled(selectedUserID.isEmpty || passwordNew.isEmpty)
+                }
+            }
+        }
     }
 
     private func userCard(_ user: JSONValue) -> some View {
@@ -39,9 +81,12 @@ struct EmbyUsersView: View {
                     Spacer()
                     StatusChip(text: disabled ? "已禁用" : "启用中", ok: !disabled)
                 }
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 74), spacing: 8)], spacing: 8) {
+                LazyVGrid(columns: buttonColumns, spacing: 8) {
                     ModuleActionButton(title: "详情", systemImage: "info.circle") {
                         Task { await showUser(id: id) }
+                    }
+                    ModuleActionButton(title: "编辑", systemImage: "square.and.pencil") {
+                        fillUser(user)
                     }
                     ModuleActionButton(title: "绑定", systemImage: "link") {
                         Task { await bind(id: id) }
@@ -100,12 +145,53 @@ struct EmbyUsersView: View {
         catch { toast = error.localizedDescription }
     }
     private func showUser(id: String) async {
-        do { detail = try await service.detail(userID: id); showDetail = true }
+        do {
+            detail = try await service.detail(userID: id)
+            detailTitle = "用户详情"
+            showDetail = true
+        }
         catch { toast = error.localizedDescription }
     }
     private func bind(id: String) async {
         do { try await service.bind(userID: id); toast = "已绑定用户"; await load() }
         catch { toast = error.localizedDescription }
+    }
+    private func fillUser(_ user: JSONValue) {
+        selectedUserID = user.firstString("Id", "id", "user_id") ?? selectedUserID
+        rawUserBody = user.prettyJSONString()
+    }
+    private func seedUserTemplate() {
+        rawUserBody = """
+        {"Name":"","Policy":{},"Configuration":{}}
+        """
+    }
+    private func updateUser() async {
+        do {
+            guard !selectedUserID.isEmpty else { throw APIError.validation(["请先填写 user_id"]) }
+            guard !rawUserBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写用户更新 JSON"])
+            }
+            detail = try await service.update(userID: selectedUserID, try JSONValue.parse(rawUserBody))
+            detailTitle = "用户保存"
+            showDetail = true
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+    private func setPassword() async {
+        do {
+            guard !selectedUserID.isEmpty else { throw APIError.validation(["请先填写 user_id"]) }
+            guard !passwordNew.isEmpty else { throw APIError.validation(["请填写新密码"]) }
+            detail = try await service.setPassword(
+                userID: selectedUserID,
+                newPassword: passwordNew,
+                currentPassword: passwordCurrent.isEmpty ? nil : passwordCurrent,
+                reset: resetPassword
+            )
+            detailTitle = "密码保存"
+            showDetail = true
+            passwordCurrent = ""
+            passwordNew = ""
+        } catch { toast = error.localizedDescription }
     }
 }
 
@@ -116,12 +202,18 @@ struct EmbyTasksView: View {
     @State private var error: Error?
     @State private var toast: String?
     @State private var detail: JSONValue?
+    @State private var detailTitle = "触发器"
     @State private var showDetail = false
+    @State private var selectedTaskID = ""
+    @State private var rawTriggersBody = ""
+
+    private let buttonColumns = [GridItem(.adaptive(minimum: 78), spacing: 8)]
 
     var body: some View {
         ModuleScaffold(title: "Emby 任务", isLoading: isLoading && tasks.isEmpty, error: tasks.isEmpty ? error : nil,
                        isEmpty: !isLoading && tasks.isEmpty && error == nil, emptyTitle: "暂无任务",
                        onRetry: { Task { await load() } }) {
+            triggerEditorCard
             ForEach(Array(tasks.enumerated()), id: \.offset) { _, task in
                 let name = task.firstString("Name", "name") ?? "任务"
                 let id = task.firstString("Id", "id") ?? ""
@@ -133,7 +225,7 @@ struct EmbyTasksView: View {
                             Spacer()
                             if let state { GlassPill(state, systemImage: "info.circle") }
                         }
-                        HStack(spacing: 10) {
+                        LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
                             ModuleActionButton(title: "运行", systemImage: "play.fill", prominent: true) {
                                 Task { await run(id: id) }
                             }
@@ -143,7 +235,9 @@ struct EmbyTasksView: View {
                             ModuleActionButton(title: "触发器", systemImage: "clock.badge") {
                                 Task { await showTriggers(id: id) }
                             }
-                            Spacer()
+                            ModuleActionButton(title: "编辑", systemImage: "square.and.pencil") {
+                                Task { await editTriggers(id: id) }
+                            }
                         }
                     }
                 }
@@ -151,7 +245,33 @@ struct EmbyTasksView: View {
         }
         .task { await load() }
         .toast($toast)
-        .sheet(isPresented: $showDetail) { detailSheet(title: "触发器", json: detail) }
+        .sheet(isPresented: $showDetail) { detailSheet(title: detailTitle, json: detail) }
+    }
+
+    private var triggerEditorCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("触发器编辑").font(.headline)
+                TextField("task_id", text: $selectedTaskID)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("触发器 JSON（数组或包含 triggers 的对象）", text: $rawTriggersBody, axis: .vertical)
+                    .lineLimit(3...10)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
+                    ModuleActionButton(title: "模板", systemImage: "doc.badge.plus") { rawTriggersBody = "[]" }
+                    ModuleActionButton(title: "读取", systemImage: "clock.badge") {
+                        Task { await editTriggers(id: selectedTaskID) }
+                    }
+                    .disabled(selectedTaskID.isEmpty)
+                    ModuleActionButton(title: "保存", systemImage: "square.and.arrow.down", prominent: true) {
+                        Task { await saveTriggers() }
+                    }
+                    .disabled(selectedTaskID.isEmpty)
+                }
+            }
+        }
     }
 
     private func load() async {
@@ -166,8 +286,35 @@ struct EmbyTasksView: View {
         do { try await service.stop(taskID: id); toast = "已停止" } catch { toast = error.localizedDescription }
     }
     private func showTriggers(id: String) async {
-        do { detail = try await service.triggers(taskID: id); showDetail = true }
+        do {
+            detail = try await service.triggers(taskID: id)
+            detailTitle = "触发器"
+            showDetail = true
+        }
         catch { toast = error.localizedDescription }
+    }
+    private func editTriggers(id: String) async {
+        guard !id.isEmpty else { return }
+        do {
+            selectedTaskID = id
+            detail = try await service.triggers(taskID: id)
+            rawTriggersBody = detail?.prettyJSONString() ?? ""
+            detailTitle = "触发器"
+            showDetail = true
+        } catch { toast = error.localizedDescription }
+    }
+    private func saveTriggers() async {
+        do {
+            guard !selectedTaskID.isEmpty else { throw APIError.validation(["请先填写 task_id"]) }
+            guard !rawTriggersBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写触发器 JSON"])
+            }
+            let json = try JSONValue.parse(rawTriggersBody)
+            let triggers = json["triggers"].isNull ? json : json["triggers"]
+            try await service.saveTriggers(taskID: selectedTaskID, triggers: triggers)
+            toast = "触发器已保存"
+            await load()
+        } catch { toast = error.localizedDescription }
     }
 }
 

@@ -8,7 +8,9 @@ struct Config302View: View {
     @State private var toast: String?
     @State private var cookie = ""
     @State private var qrApp = "115android"
+    @State private var qrUID = ""
     @State private var localMediaRoot = ""
+    @State private var rawConfigBody = ""
     @State private var detail: JSONValue?
     @State private var detailTitle = "结果"
     @State private var showDetail = false
@@ -46,7 +48,14 @@ struct Config302View: View {
                         ModuleActionButton(title: "生成二维码", systemImage: "qrcode", prominent: true) {
                             Task { await startQRCode() }
                         }
+                        ModuleActionButton(title: "登录状态", systemImage: "person.badge.clock") {
+                            Task { await qrcodeStatus() }
+                        }
+                        .disabled(qrUID.isEmpty)
                     }
+                    TextField("扫码 UID（生成二维码后可填入）", text: $qrUID)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
                 }
             }
             GlassCard {
@@ -59,6 +68,24 @@ struct Config302View: View {
                         Task { await ensureDirs() }
                     }
                     .disabled(localMediaRoot.isEmpty)
+                }
+            }
+            GlassCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("配置编辑").font(.headline)
+                    TextField("302 / 115 配置 JSON", text: $rawConfigBody, axis: .vertical)
+                        .lineLimit(3...10)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], alignment: .leading, spacing: 8) {
+                        ModuleActionButton(title: "填入当前", systemImage: "square.and.pencil") { seedConfigBody() }
+                        ModuleActionButton(title: "保存配置", systemImage: "square.and.arrow.down", prominent: true) {
+                            Task { await saveConfig() }
+                        }
+                        ModuleActionButton(title: "保存 Emby", systemImage: "tv.badge.checkmark") {
+                            Task { await saveEmbyConfig() }
+                        }
+                    }
                 }
             }
             if let config { JSONKeyValueCard(title: "当前配置", json: config, limit: 20) }
@@ -85,6 +112,16 @@ struct Config302View: View {
 
     private var toolbarMenu: some View {
         Menu {
+            Button {
+                seedConfigBody()
+            } label: {
+                Label("填入配置 JSON", systemImage: "square.and.pencil")
+            }
+            Button {
+                Task { await saveConfig() }
+            } label: {
+                Label("保存配置 JSON", systemImage: "square.and.arrow.down")
+            }
             Button {
                 Task { await signinAll() }
             } label: {
@@ -123,7 +160,15 @@ struct Config302View: View {
     private func startQRCode() async {
         do {
             detail = try await service.qrcodeStart(app: qrApp.isEmpty ? "115android" : qrApp)
+            qrUID = detail?.firstString("uid", "UID", "qrcode_uid") ?? qrUID
             detailTitle = "扫码二维码"
+            showDetail = true
+        } catch { toast = error.localizedDescription }
+    }
+    private func qrcodeStatus() async {
+        do {
+            detail = try await service.qrcodeStatus(uid: qrUID, app: qrApp.isEmpty ? "115android" : qrApp)
+            detailTitle = "扫码状态"
             showDetail = true
         } catch { toast = error.localizedDescription }
     }
@@ -141,6 +186,33 @@ struct Config302View: View {
             showDetail = true
         } catch { toast = error.localizedDescription }
     }
+    private func seedConfigBody() {
+        rawConfigBody = config?.prettyJSONString() ?? """
+        {"drives":[],"embys":[]}
+        """
+    }
+    private func saveConfig() async {
+        do {
+            guard !rawConfigBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写配置 JSON"])
+            }
+            detail = try await service.saveConfig(try JSONValue.parse(rawConfigBody))
+            detailTitle = "配置保存"
+            showDetail = true
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+    private func saveEmbyConfig() async {
+        do {
+            guard !rawConfigBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写 Emby 配置 JSON"])
+            }
+            detail = try await service.saveEmbyConfig(try JSONValue.parse(rawConfigBody))
+            detailTitle = "Emby 配置保存"
+            showDetail = true
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
 }
 
 struct FnosSignView: View {
@@ -150,6 +222,7 @@ struct FnosSignView: View {
     @State private var error: Error?
     @State private var toast: String?
     @State private var cookie = ""
+    @State private var rawConfigBody = ""
 
     var body: some View {
         ModuleScaffold(title: "飞牛签到", isLoading: isLoading && state == nil, error: state == nil ? error : nil,
@@ -171,6 +244,21 @@ struct FnosSignView: View {
                         .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
                     ModuleActionButton(title: "测试 Cookie", systemImage: "checkmark.shield") {
                         Task { await testCookie() }
+                    }
+                }
+            }
+            GlassCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("配置编辑").font(.headline)
+                    TextField("签到配置 JSON", text: $rawConfigBody, axis: .vertical)
+                        .lineLimit(3...8)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                    HStack(spacing: 10) {
+                        ModuleActionButton(title: "填入模板", systemImage: "doc.badge.plus") { seedConfigBody() }
+                        ModuleActionButton(title: "保存配置", systemImage: "square.and.arrow.down", prominent: true) {
+                            Task { await saveConfig() }
+                        }
                     }
                 }
             }
@@ -196,6 +284,21 @@ struct FnosSignView: View {
     private func clearHistory() async {
         do { try await service.clearHistory(); toast = "已清空签到历史"; await load() }
         catch { toast = error.localizedDescription }
+    }
+    private func seedConfigBody() {
+        rawConfigBody = state?.prettyJSONString() ?? """
+        {"enabled":true,"notify":true,"cookie":"","cron":"0 8 * * *","max_retries":3,"retry_interval":30,"history_days":30}
+        """
+    }
+    private func saveConfig() async {
+        do {
+            guard !rawConfigBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写签到配置 JSON"])
+            }
+            _ = try await service.saveConfig(try JSONValue.parse(rawConfigBody))
+            toast = "签到配置已保存"
+            await load()
+        } catch { toast = error.localizedDescription }
     }
 }
 

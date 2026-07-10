@@ -81,14 +81,73 @@ struct DiscoverService {
         try await client.request(.get, "/api/discover/library/series/\(tmdbID)")
     }
 
-    func missingEpisodeStats(refresh: Bool = false, summaryOnly: Bool = true) async throws -> JSONValue {
+    func missingEpisodeStats(refresh: Bool = false, summaryOnly: Bool = true, start: Int = 0, seasonMode: String = "all") async throws -> JSONValue {
         try await client.request(.get, "/api/discover/library/missing-episode-stats",
-                                 query: ["refresh": refresh ? "1" : "0",
-                                         "summary_only": summaryOnly ? "1" : "0"])
+                                  query: ["refresh": refresh ? "1" : "0",
+                                          "summary_only": summaryOnly ? "1" : "0",
+                                          "start": String(start),
+                                          "season_mode": seasonMode])
+    }
+
+    func manualCompleteMissing(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/discover/library/missing-episode-stats/manual-complete", body: body)
     }
 
     func tmdbArtworkBatch(_ body: JSONValue) async throws -> JSONValue {
         try await client.request(.post, "/api/discover/tmdb_artwork/batch", body: body)
+    }
+
+    func resolveTMDB(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/discover/resolve_tmdb", body: body)
+    }
+
+    func discoverByGenre(genreID: String, mediaType: String = "movie", page: Int = 1) async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/discover_by_genre",
+            query: ["genre_id": genreID, "media_type": mediaType, "page": String(page)])
+    }
+
+    func tmdbDiscover(_ params: JSONValue) async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/tmdb/discover", query: queryMap(from: params))
+    }
+
+    func provider(sourceKey: String) async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/provider/\(sourceKey)")
+    }
+
+    func embyWebURL(serverIndex: Int = 0, itemID: String) async throws -> JSONValue {
+        try await client.request(.get, "/api/discover/emby_web_url",
+                                 query: ["server_idx": String(serverIndex), "item_id": itemID])
+    }
+
+    func deleteEmbyItems(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/discover/emby/items/delete", body: body)
+    }
+
+    func taskCover(key: String) async throws -> JSONValue {
+        guard let url = client.mediaURL("/api/discover/task_cover", query: ["key": key]) else {
+            throw APIError.notConfigured
+        }
+        return JSONValue.obj(["url": url.absoluteString])
+    }
+
+    func imageProxyURL(kind: String, sourceURL: String) throws -> JSONValue {
+        let path: String
+        switch kind {
+        case "bangumi": path = "/api/discover/bangumi_img"
+        case "bili": path = "/api/discover/bili_img"
+        case "cached": path = "/api/discover/cached_img"
+        default: path = "/api/discover/douban_img"
+        }
+        guard let url = client.mediaURL(path, query: ["url": sourceURL]) else { throw APIError.notConfigured }
+        return JSONValue.obj(["url": url.absoluteString])
+    }
+
+    func embyCoverURL(serverIndex: String, itemID: String, timestamp: String, signature: String) throws -> JSONValue {
+        guard let url = client.mediaURL("/api/discover/emby_cover",
+            query: ["server_idx": serverIndex, "item_id": itemID, "ts": timestamp, "sig": signature]) else {
+            throw APIError.notConfigured
+        }
+        return JSONValue.obj(["url": url.absoluteString])
     }
 
     // MARK: Image URLs
@@ -107,5 +166,14 @@ struct DiscoverService {
 
     func backdropURL(mediaType: String, tmdbID: Int) -> URL? {
         client.mediaURL("/api/discover/tmdb_backdrop/\(mediaType)/\(tmdbID)")
+    }
+
+    private func queryMap(from json: JSONValue) -> [String: String?] {
+        guard let object = json.object else { return [:] }
+        return object.reduce(into: [String: String?]()) { result, entry in
+            if !entry.value.isNull {
+                result[entry.key] = entry.value.string
+            }
+        }
     }
 }

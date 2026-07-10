@@ -4,15 +4,22 @@ struct TasksView: View {
     @State private var model = TasksViewModel()
     @State private var panel: TaskPanel?
     @State private var taskToDelete: TaskItem?
+    @State private var showTaskEditor = false
+    @State private var showBatchRunner = false
+    @State private var editingTaskID = ""
+    @State private var rawTaskBody = ""
+    @State private var rawBatchBody = ""
 
     private enum TaskPanel: Identifiable, Equatable {
         case progress
         case logs
+        case batch
 
         var id: String {
             switch self {
             case .progress: "progress"
             case .logs: "logs"
+            case .batch: "batch"
             }
         }
 
@@ -20,6 +27,7 @@ struct TasksView: View {
             switch self {
             case .progress: "任务进度"
             case .logs: "系统日志"
+            case .batch: "批量运行结果"
             }
         }
     }
@@ -50,6 +58,19 @@ struct TasksView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
+                            editingTaskID = ""
+                            rawTaskBody = taskTemplate
+                            showTaskEditor = true
+                        } label: {
+                            Label("新建任务", systemImage: "plus.circle")
+                        }
+                        Button {
+                            rawBatchBody = batchRunTemplate
+                            showBatchRunner = true
+                        } label: {
+                            Label("批量运行", systemImage: "play.rectangle.on.rectangle")
+                        }
+                        Button {
                             Task {
                                 await model.loadProgress()
                                 panel = .progress
@@ -64,6 +85,14 @@ struct TasksView: View {
                             }
                         } label: {
                             Label("查看系统日志", systemImage: "doc.text")
+                        }
+                        Button {
+                            Task {
+                                await model.loadLogStreamURL()
+                                panel = .logs
+                            }
+                        } label: {
+                            Label("日志流 URL", systemImage: "dot.radiowaves.left.and.right")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -87,7 +116,7 @@ struct TasksView: View {
                 NavigationStack {
                     TaskJSONSheet(
                         title: panel.title,
-                        json: panel == .progress ? model.progress : model.logs
+                        json: panelJSON(panel)
                     )
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
@@ -96,6 +125,8 @@ struct TasksView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showTaskEditor) { taskEditorSheet }
+            .sheet(isPresented: $showBatchRunner) { batchRunnerSheet }
             .confirmationDialog("确定删除这个任务？", isPresented: Binding(
                 get: { taskToDelete != nil },
                 set: { if !$0 { taskToDelete = nil } }
@@ -113,6 +144,14 @@ struct TasksView: View {
             .alert("提示", isPresented: Binding(
                 get: { model.toast != nil }, set: { if !$0 { model.toast = nil } }
             )) { Button("好", role: .cancel) {} } message: { Text(model.toast ?? "") }
+        }
+    }
+
+    private func panelJSON(_ panel: TaskPanel) -> JSONValue? {
+        switch panel {
+        case .progress: model.progress
+        case .logs: model.logs
+        case .batch: model.batchResult
         }
     }
 
@@ -146,6 +185,11 @@ struct TasksView: View {
                     }
                     .appGlassButtonStyle().controlSize(.small)
 
+                    Button { edit(task) } label: {
+                        Label("编辑", systemImage: "square.and.pencil")
+                    }
+                    .appGlassButtonStyle().controlSize(.small)
+
                     Button(role: .destructive) { taskToDelete = task } label: {
                         Label("删除", systemImage: "trash")
                     }
@@ -155,6 +199,123 @@ struct TasksView: View {
                 .font(.caption.weight(.semibold))
             }
         }
+    }
+
+    private var taskEditorSheet: some View {
+        NavigationStack {
+            ScrollView {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(editingTaskID.isEmpty ? "新建任务" : "编辑任务").font(.headline)
+                        TextField("任务 JSON", text: $rawTaskBody, axis: .vertical)
+                            .lineLimit(8...18)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .font(.system(.caption, design: .monospaced))
+                            .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                        ModuleActionButton(title: "填入模板", systemImage: "doc.badge.plus") {
+                            rawTaskBody = taskTemplate
+                        }
+                    }
+                }
+                .padding(Theme.screenPadding)
+            }
+            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .navigationTitle(editingTaskID.isEmpty ? "新建任务" : "编辑任务")
+            .navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("取消") { showTaskEditor = false } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") { Task { await saveTaskEditor() } }
+                        .disabled(rawTaskBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private var batchRunnerSheet: some View {
+        NavigationStack {
+            ScrollView {
+                GlassCard {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("批量运行").font(.headline)
+                        TextField("批量任务 JSON", text: $rawBatchBody, axis: .vertical)
+                            .lineLimit(8...18)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .font(.system(.caption, design: .monospaced))
+                            .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                        ModuleActionButton(title: "填入模板", systemImage: "doc.badge.plus") {
+                            rawBatchBody = batchRunTemplate
+                        }
+                    }
+                }
+                .padding(Theme.screenPadding)
+            }
+            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .navigationTitle("批量运行")
+            .navigationBarTitleDisplayMode(.inline)
+            .appLiquidNavigationChrome()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("取消") { showBatchRunner = false } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("运行") { Task { await runBatchEditor() } }
+                        .disabled(rawBatchBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private var taskTemplate: String {
+        """
+        {"name":"","cron":"0 2 * * *","preset_filename":"","targets":[],"mode":"random","enabled":true,"auto_include_new_libraries":false}
+        """
+    }
+
+    private var batchRunTemplate: String {
+        """
+        {"preset_filename":"","targets":[],"mode":"random"}
+        """
+    }
+
+    private func edit(_ task: TaskItem) {
+        editingTaskID = task.id
+        rawTaskBody = task.raw.prettyJSONString()
+        showTaskEditor = true
+    }
+
+    @MainActor
+    private func saveTaskEditor() async {
+        do {
+            let body = try taskBodyWithIDIfNeeded()
+            if editingTaskID.isEmpty {
+                await model.createTask(body)
+            } else {
+                await model.updateTask(body)
+            }
+            if model.error == nil { showTaskEditor = false }
+        } catch { model.error = error }
+    }
+
+    private func taskBodyWithIDIfNeeded() throws -> JSONValue {
+        let parsed = try JSONValue.parse(rawTaskBody)
+        guard !editingTaskID.isEmpty else { return parsed }
+        guard var object = parsed.object else { return parsed }
+        if object["id"] == nil || object["id"]?.isNull == true {
+            object["id"] = .string(editingTaskID)
+        }
+        return .object(object)
+    }
+
+    @MainActor
+    private func runBatchEditor() async {
+        do {
+            let body = try JSONValue.parse(rawBatchBody)
+            await model.runBatch(body)
+            if model.error == nil {
+                showBatchRunner = false
+                panel = .batch
+            }
+        } catch { model.toast = error.localizedDescription }
     }
 }
 

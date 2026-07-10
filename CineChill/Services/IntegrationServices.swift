@@ -38,6 +38,9 @@ struct FnosSignService {
             body: JSONValue.obj(["enabled": enabled, "notify": notify, "cookie": cookie, "cron": cron,
                                  "max_retries": maxRetries, "retry_interval": retryInterval, "history_days": historyDays]))
     }
+    func saveConfig(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/fnos_sign/config", body: body)
+    }
     func testCookie(_ cookie: String) async throws -> JSONValue {
         try await client.request(.post, "/api/fnos_sign/test_cookie", body: JSONValue.obj(["cookie": cookie]))
     }
@@ -48,6 +51,12 @@ struct FnosSignService {
 struct Config302Service {
     let client = APIClient.shared
     func config() async throws -> JSONValue { try await client.request(.get, "/api/config_302/get") }
+    func saveConfig(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/save", body: body)
+    }
+    func saveEmbyConfig(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/save_emby", body: body)
+    }
     func test115(cookie: String) async throws -> JSONValue {
         try await client.request(.post, "/api/config_302/test_115", body: JSONValue.obj(["cookie": cookie]))
     }
@@ -63,6 +72,10 @@ struct Config302Service {
     func qrcodeApps() async throws -> JSONValue { try await client.request(.get, "/api/config_302/115_qrcode/apps") }
     func qrcodeStart(app: String) async throws -> JSONValue {
         try await client.request(.post, "/api/config_302/115_qrcode/start", body: JSONValue.obj(["app": app]))
+    }
+    func qrcodeStatus(uid: String, app: String) async throws -> JSONValue {
+        try await client.request(.post, "/api/config_302/115_qrcode/status",
+                                 body: JSONValue.obj(["uid": uid, "app": app]))
     }
     func qrcodeResult(uid: String, app: String) async throws -> JSONValue {
         try await client.request(.post, "/api/config_302/115_qrcode/result",
@@ -83,6 +96,10 @@ struct ForwardService {
             body: JSONValue.obj(["type": type, "tmdb_id": tmdbID, "title": title, "year": year,
                                  "season": season, "episode": episode, "sources": sources]))
     }
+    func searchResourcesStream(type: String, tmdbID: Int, title: String?, year: String?, sources: [String]?) async throws -> JSONValue {
+        try await client.request(.post, "/api/forward/search_resources/stream",
+            body: JSONValue.obj(["type": type, "tmdb_id": tmdbID, "title": title, "year": year, "sources": sources]))
+    }
     func resources(type: String, tmdbID: Int) async throws -> JSONValue {
         try await client.request(.post, "/api/forward/resources",
                                  body: JSONValue.obj(["type": type, "tmdb_id": tmdbID]))
@@ -101,6 +118,23 @@ struct ForwardService {
     }
     func refreshToken() async throws -> JSONValue {
         try await client.request(.post, "/api/forward/token/refresh")
+    }
+    func playURL(token: String, source: String, type: String, tmdbID: String, ignoreEnabled: Bool = false) throws -> JSONValue {
+        guard let url = client.mediaURL("/api/forward/play",
+            query: ["token": token.isEmpty ? nil : token,
+                    "source": source.isEmpty ? "aiying" : source,
+                    "type": type,
+                    "tmdb_id": tmdbID.isEmpty ? nil : tmdbID,
+                    "ignore_enabled": String(ignoreEnabled)]) else {
+            throw APIError.notConfigured
+        }
+        return JSONValue.obj(["url": url.absoluteString])
+    }
+    func widgetURL(token: String) throws -> JSONValue {
+        guard let url = client.mediaURL("/api/forward/widget.js", query: ["token": token.isEmpty ? nil : token]) else {
+            throw APIError.notConfigured
+        }
+        return JSONValue.obj(["url": url.absoluteString])
     }
 }
 
@@ -174,6 +208,20 @@ struct ResourcesService {
     func deleteFont(name: String) async throws -> JSONValue {
         try await client.request(.post, "/api/delete_font", body: JSONValue.obj(["font_name": name, "name": name]))
     }
+    func uploadFont(fileURL: URL) async throws -> JSONValue {
+        let access = fileURL.startAccessingSecurityScopedResource()
+        defer {
+            if access { fileURL.stopAccessingSecurityScopedResource() }
+        }
+        let data = try Data(contentsOf: fileURL)
+        return try await client.uploadMultipart(
+            "/api/upload_font",
+            fieldName: "file",
+            filename: fileURL.lastPathComponent,
+            mimeType: "application/octet-stream",
+            data: data
+        )
+    }
     func saveTemplate(_ body: JSONValue) async throws -> JSONValue {
         try await client.request(.post, "/api/save_template", body: body)
     }
@@ -218,5 +266,11 @@ struct RssService {
     }
     func native(_ path: String, query: [String: String?] = [:]) async throws -> JSONValue {
         try await client.request(.get, path, query: query)
+    }
+    func imageProxyURL(sourceURL: String) throws -> JSONValue {
+        guard let url = client.mediaURL("/api/rss/image_proxy", query: ["url": sourceURL]) else {
+            throw APIError.notConfigured
+        }
+        return JSONValue.obj(["url": url.absoluteString])
     }
 }

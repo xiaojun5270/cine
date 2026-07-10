@@ -10,6 +10,7 @@ final class TasksViewModel {
     var runningIDs: Set<String> = []
     var progress: JSONValue?
     var logs: JSONValue?
+    var batchResult: JSONValue?
 
     private let service = TaskService()
 
@@ -40,6 +41,33 @@ final class TasksViewModel {
         } catch { self.error = error; await load() }
     }
 
+    func createTask(_ body: JSONValue) async {
+        do {
+            _ = try await service.createTask(body)
+            toast = "任务已创建"
+            await load()
+        } catch { self.error = error }
+    }
+
+    func updateTask(_ body: JSONValue) async {
+        do {
+            _ = try await service.updateTask(body)
+            toast = "任务已保存"
+            await load()
+        } catch { self.error = error }
+    }
+
+    func runBatch(_ body: JSONValue) async {
+        error = nil
+        do {
+            batchResult = try await service.runTaskBatch(body)
+            toast = "批量任务已提交"
+        } catch {
+            self.error = error
+            toast = error.localizedDescription
+        }
+    }
+
     func delete(_ task: TaskItem) async {
         do {
             try await service.deleteTask(id: task.id)
@@ -57,6 +85,13 @@ final class TasksViewModel {
     func loadLogs() async {
         do {
             logs = try await service.systemLogs()
+        } catch { self.error = error }
+    }
+
+    func loadLogStreamURL() async {
+        do {
+            logs = try service.systemLogsStreamURL()
+            toast = "已生成日志流 URL"
         } catch { self.error = error }
     }
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct MoviePilotView: View {
     private let service = MoviePilotService()
@@ -230,6 +231,7 @@ struct RssView: View {
     @State private var buildProxy = true
     @State private var nativePath = "/api/rss/native/tmdb/trending"
     @State private var nativeQueryBody = "{\"media_type\":\"movie\",\"time_window\":\"week\",\"language\":\"zh-CN\",\"page_limit\":1,\"max_items\":50}"
+    @State private var rssImageProxyURL = ""
 
     private let buttonColumns = [GridItem(.adaptive(minimum: 92), spacing: 8)]
 
@@ -349,6 +351,9 @@ struct RssView: View {
                     .lineLimit(2...8)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                     .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                TextField("RSS 图片 URL", text: $rssImageProxyURL)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
                 LazyVGrid(columns: buttonColumns, alignment: .leading, spacing: 8) {
                     nativePresetButtons
                 }
@@ -393,6 +398,9 @@ struct RssView: View {
             }
             ModuleActionButton(title: "国内平台", systemImage: "play.tv") {
                 Task { await runNativePreset("国内平台", path: "/api/rss/native/domestic/tencent", query: "{\"mtype\":\"movie\",\"page_limit\":1}") }
+            }
+            ModuleActionButton(title: "图片代理", systemImage: "photo.badge.arrow.down") {
+                Task { await rssImageProxy() }
             }
         }
     }
@@ -538,6 +546,15 @@ struct RssView: View {
         } catch { toast = error.localizedDescription }
     }
 
+    private func rssImageProxy() async {
+        do {
+            guard !rssImageProxyURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw APIError.validation(["请先填写 RSS 图片 URL"])
+            }
+            show("RSS 图片代理 URL", try service.imageProxyURL(sourceURL: rssImageProxyURL))
+        } catch { toast = error.localizedDescription }
+    }
+
     private func runNativePreset(_ title: String, path: String, query: String) async {
         nativePath = path
         nativeQueryBody = query
@@ -644,6 +661,7 @@ struct ForwardView: View {
     @State private var sourcesInput = ""
     @State private var source = "aiying"
     @State private var resourceID = ""
+    @State private var forwardToken = ""
     @State private var rawResourceBody = ""
     @State private var rawConfigBody = ""
 
@@ -685,6 +703,9 @@ struct ForwardView: View {
                         ModuleActionButton(title: "搜索", systemImage: "magnifyingglass", prominent: true) {
                             Task { await search() }
                         }
+                        ModuleActionButton(title: "流式搜", systemImage: "dot.radiowaves.left.and.right") {
+                            Task { await searchStream() }
+                        }
                         ModuleActionButton(title: "资源列表", systemImage: "list.bullet.rectangle") {
                             Task { await resources() }
                         }
@@ -704,6 +725,9 @@ struct ForwardView: View {
                             .textInputAutocapitalization(.never).autocorrectionDisabled()
                     }
                     .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
+                    TextField("token（播放/组件可选）", text: $forwardToken)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .padding(12).background(.white.opacity(0.06), in: .rect(cornerRadius: 10))
                     TextField("完整资源 JSON（可选，留空使用上方字段）", text: $rawResourceBody, axis: .vertical)
                         .lineLimit(2...8)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -717,6 +741,12 @@ struct ForwardView: View {
                         }
                         ModuleActionButton(title: "转存", systemImage: "tray.and.arrow.down") {
                             Task { await runResourceAction("转存结果") { try await service.transferResource($0) } }
+                        }
+                        ModuleActionButton(title: "播放URL", systemImage: "play.rectangle") {
+                            Task { await showPlayURL() }
+                        }
+                        ModuleActionButton(title: "组件URL", systemImage: "curlybraces.square") {
+                            Task { await showWidgetURL() }
                         }
                     }
                 }
@@ -830,6 +860,21 @@ struct ForwardView: View {
         } catch { toast = error.localizedDescription }
     }
 
+    private func searchStream() async {
+        do {
+            let id = try parsedTMDB()
+            result = try await service.searchResourcesStream(
+                type: forwardType,
+                tmdbID: id,
+                title: title.isEmpty ? nil : title,
+                year: year.isEmpty ? nil : year,
+                sources: selectedSources
+            )
+            resultTitle = "流式搜索"
+            showResult = true
+        } catch { toast = error.localizedDescription }
+    }
+
     private func testResources() async {
         do {
             let id = try parsedTMDB()
@@ -851,6 +896,22 @@ struct ForwardView: View {
         do {
             result = try await service.refreshToken()
             resultTitle = "令牌刷新"
+            showResult = true
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func showPlayURL() async {
+        do {
+            result = try service.playURL(token: forwardToken, source: source, type: forwardType, tmdbID: tmdbID)
+            resultTitle = "播放 URL"
+            showResult = true
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func showWidgetURL() async {
+        do {
+            result = try service.widgetURL(token: forwardToken)
+            resultTitle = "组件 URL"
             showResult = true
         } catch { toast = error.localizedDescription }
     }
@@ -932,6 +993,8 @@ struct ResourcesView: View {
     @State private var result: JSONValue?
     @State private var resultTitle = "结果"
     @State private var showResult = false
+    @State private var showFontImporter = false
+    @State private var isUploadingFont = false
     @State private var suiteName = ""
     @State private var templateName = ""
     @State private var fontName = ""
@@ -1015,6 +1078,10 @@ struct ResourcesView: View {
                             Task { await deleteFont(fontName) }
                         }
                         .disabled(fontName.isEmpty)
+                        ModuleActionButton(title: isUploadingFont ? "上传中" : "上传字体", systemImage: "square.and.arrow.up") {
+                            showFontImporter = true
+                        }
+                        .disabled(isUploadingFont)
                     }
                 }
             }
@@ -1060,6 +1127,16 @@ struct ResourcesView: View {
         .task { await load() }
         .toast($toast)
         .sheet(isPresented: $showResult) { JSONResultSheet(title: resultTitle, json: result) }
+        .fileImporter(isPresented: $showFontImporter, allowedContentTypes: [.data], allowsMultipleSelection: false) { response in
+            switch response {
+            case .success(let urls):
+                if let url = urls.first {
+                    Task { await uploadFont(url) }
+                }
+            case .failure(let error):
+                toast = error.localizedDescription
+            }
+        }
     }
 
     private var toolbarMenu: some View {
@@ -1128,6 +1205,17 @@ struct ResourcesView: View {
         do {
             result = try await service.deleteFont(name: name)
             resultTitle = "删除字体"
+            showResult = true
+            await load()
+        } catch { toast = error.localizedDescription }
+    }
+
+    private func uploadFont(_ url: URL) async {
+        isUploadingFont = true
+        defer { isUploadingFont = false }
+        do {
+            result = try await service.uploadFont(fileURL: url)
+            resultTitle = "上传字体"
             showResult = true
             await load()
         } catch { toast = error.localizedDescription }

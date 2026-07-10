@@ -77,6 +77,58 @@ final class APIClient: @unchecked Sendable {
         }
     }
 
+    func uploadMultipart(
+        _ path: String,
+        fieldName: String,
+        filename: String,
+        mimeType: String,
+        data: Data
+    ) async throws -> JSONValue {
+        guard let base = baseURL else { throw APIError.notConfigured }
+        guard let url = URLComponents(url: base.appendingPathComponent(path.hasPrefix("/") ? String(path.dropFirst()) : path),
+                                      resolvingAgainstBaseURL: false)?.url else {
+            throw APIError.invalidURL
+        }
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        var body = Data()
+        let safeFilename = filename.replacingOccurrences(of: "\"", with: "_")
+        body.appendUTF8("--\(boundary)\r\n")
+        body.appendUTF8("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(safeFilename)\"\r\n")
+        body.appendUTF8("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(data)
+        body.appendUTF8("\r\n--\(boundary)--\r\n")
+
+        var req = URLRequest(url: url)
+        req.httpMethod = Method.post.rawValue
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.httpBody = body
+
+        do {
+            let (data, response) = try await session.data(for: req)
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.transport("无响应")
+            }
+            switch http.statusCode {
+            case 200...299:
+                if data.isEmpty { return .null }
+                if let json = try? JSONDecoder().decode(JSONValue.self, from: data) { return json }
+                return .string(String(data: data, encoding: .utf8) ?? "")
+            case 401, 403:
+                throw APIError.unauthorized
+            case 422:
+                throw APIError.validation(Self.parseValidation(data))
+            default:
+                throw APIError.http(status: http.statusCode, message: Self.parseMessage(data))
+            }
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.transport(error.localizedDescription)
+        }
+    }
+
     /// Core request execution with error normalisation.
     func rawData(
         _ method: Method,
@@ -159,4 +211,10 @@ struct AnyEncodable: Encodable {
     private let encodeFunc: (Encoder) throws -> Void
     init(_ wrapped: any Encodable) { encodeFunc = wrapped.encode }
     func encode(to encoder: Encoder) throws { try encodeFunc(encoder) }
+}
+
+private extension Data {
+    mutating func appendUTF8(_ string: String) {
+        append(contentsOf: string.utf8)
+    }
 }

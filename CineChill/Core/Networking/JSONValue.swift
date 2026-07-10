@@ -314,6 +314,15 @@ extension JSONValue {
         }
     }
 
+    static func parse(_ text: String) throws -> JSONValue {
+        guard let data = text.data(using: .utf8) else { throw APIError.decoding("JSON 不是 UTF-8 文本") }
+        return try JSONDecoder().decode(JSONValue.self, from: data)
+    }
+
+    static func parseObjectOrEmpty(_ text: String) throws -> JSONValue {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .obj([:]) : try parse(text)
+    }
+
     /// Extracts an array of items from common container shapes.
     func items(_ extraKeys: String...) -> [JSONValue] {
         if let a = array { return a }

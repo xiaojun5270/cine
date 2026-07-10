@@ -31,6 +31,18 @@ struct TaskService {
         _ = try await client.request(.post, "/api/toggle_task", body: ToggleBody(id: id, enabled: enabled))
     }
 
+    func createTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/create_task", body: body)
+    }
+
+    func updateTask(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/update_task", body: body)
+    }
+
+    func runTaskBatch(_ body: JSONValue) async throws -> JSONValue {
+        try await client.request(.post, "/api/run_task", body: body)
+    }
+
     func deleteTask(id: String) async throws {
         _ = try await client.request(.post, "/api/delete_task", body: IDBody(id: id))
     }
@@ -45,5 +57,10 @@ struct TaskService {
 
     func systemLogs(limit: Int = 200) async throws -> JSONValue {
         try await client.request(.get, "/api/system_logs", query: ["limit": String(limit)])
+    }
+
+    func systemLogsStreamURL() throws -> JSONValue {
+        guard let url = client.mediaURL("/api/system_logs/stream") else { throw APIError.notConfigured }
+        return JSONValue.obj(["url": url.absoluteString])
     }
 }

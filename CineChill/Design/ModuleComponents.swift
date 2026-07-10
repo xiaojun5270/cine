@@ -161,61 +161,65 @@ struct ModuleActionButton: View {
 
     var body: some View {
         Button(role: role, action: action) {
-            VStack(spacing: 7) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(buttonTint.opacity(prominent ? 0.24 : 0.16))
-                    Image(systemName: systemImage)
-                        .font(.system(size: 14, weight: .semibold))
-                        .symbolRenderingMode(.hierarchical)
-                }
-                .foregroundStyle(prominent ? Color.white : buttonTint)
-                .frame(width: 26, height: 24)
-
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 13, weight: .semibold))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(buttonTint)
+                    .frame(width: 16)
                 Text(title)
                     .font(.caption2.weight(.semibold))
                     .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .minimumScaleFactor(0.74)
+                    .multilineTextAlignment(.leading)
+                    .minimumScaleFactor(0.76)
                     .allowsTightening(true)
                     .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, height: 58)
+            .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .buttonStyle(ModuleActionTileButtonStyle(prominent: prominent, tint: buttonTint))
+        .buttonStyle(ModuleActionButtonStyle(prominent: prominent, tint: buttonTint))
     }
 
     private var buttonTint: Color {
-        role == .destructive ? Theme.danger : (prominent ? Theme.accent : Theme.accentBlue)
+        role == .destructive ? Theme.danger : (prominent ? Theme.accent : Color.secondary)
     }
 }
 
-private struct ModuleActionTileButtonStyle: ButtonStyle {
+private struct ModuleActionButtonStyle: ButtonStyle {
     var prominent: Bool
     var tint: Color
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(prominent ? tint.opacity(0.22) : Theme.cardTint)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(backgroundFill)
             }
-            .appGlassCard(cornerRadius: 12)
+            .appGlassCard(cornerRadius: 10)
             .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(tint.opacity(prominent ? 0.34 : 0.18), lineWidth: 0.8)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(strokeColor, lineWidth: 0.8)
             }
-            .shadow(color: tint.opacity(prominent ? 0.22 : 0.10), radius: prominent ? 12 : 8, y: 5)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .shadow(color: tint.opacity(prominent ? 0.16 : 0.06), radius: prominent ? 8 : 5, y: 3)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
             .saturation(isEnabled ? 1 : 0.25)
-            .opacity(isEnabled ? (configuration.isPressed ? 0.88 : 1) : 0.48)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.82 : 1) : 0.48)
             .animation(.easeOut(duration: 0.14), value: configuration.isPressed)
             .animation(.easeOut(duration: 0.14), value: isEnabled)
+    }
+
+    private var backgroundFill: Color {
+        prominent ? tint.opacity(0.16) : Color.white.opacity(0.045)
+    }
+
+    private var strokeColor: Color {
+        prominent ? tint.opacity(0.28) : Color.white.opacity(0.12)
     }
 }
 

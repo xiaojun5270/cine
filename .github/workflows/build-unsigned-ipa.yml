@@ -20,13 +20,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Prepare build log
-        run: : > xcodebuild.log
+        run: |
+          : > xcodebuild.log
 
       - name: Select Xcode 26
         run: |
           {
             set -e
-            xcodes="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V || true)"
+            xcodes="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort || true)"
             if [ -z "${xcodes}" ]; then
               echo "Xcode 26 is required for native Liquid Glass and iOS 26 SDK."
               ls -1 /Applications | grep Xcode || true
@@ -53,7 +54,7 @@ jobs:
         run: |
           chmod +x scripts/package-unsigned-ipa.sh
           set -o pipefail
-          scripts/package-unsigned-ipa.sh 2>&1 | tee xcodebuild.log
+          scripts/package-unsigned-ipa.sh 2>&1 | tee -a xcodebuild.log
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Summarize build failure

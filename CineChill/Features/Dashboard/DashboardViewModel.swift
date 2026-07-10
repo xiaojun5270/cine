@@ -9,6 +9,14 @@ final class DashboardViewModel {
     var isLoading = false
     var error: Error?
 
+    var debugPayload: JSONValue {
+        JSONValue.obj([
+            "dashboard_stats": stats?.raw,
+            "dashboard_device_metrics": metrics?.raw,
+            "today_picks_count": todayPicks.count
+        ])
+    }
+
     private let server = ServerService()
     private let discover = DiscoverService()
 

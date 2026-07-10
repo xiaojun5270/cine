@@ -3,6 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @Environment(SessionStore.self) private var session
     @State private var model = DashboardViewModel()
+    @State private var showRawData = false
 
     private let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
 
@@ -27,8 +28,29 @@ struct DashboardView: View {
             .background(Theme.backgroundGradient.ignoresSafeArea())
             .navigationTitle("首页")
             .appLiquidNavigationChrome()
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showRawData = true
+                        } label: {
+                            Label("查看原始数据", systemImage: "doc.text.magnifyingglass")
+                        }
+                        Button {
+                            Task { await model.load() }
+                        } label: {
+                            Label("刷新首页", systemImage: "arrow.clockwise")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
             .refreshable { await model.load() }
             .task { if model.stats == nil { await model.load() } }
+            .sheet(isPresented: $showRawData) {
+                JSONResultSheet(title: "首页原始数据", json: model.debugPayload)
+            }
         }
     }
 

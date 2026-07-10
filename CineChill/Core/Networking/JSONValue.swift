@@ -120,6 +120,138 @@ enum JSONValue: Codable, Hashable, Sendable {
         }
         return nil
     }
+
+    /// Finds the first numeric value for any of the given keys, searching nested
+    /// containers as a fallback. Key matching ignores case, `_`, `-` and spaces.
+    func firstInt(_ keys: String...) -> Int? {
+        firstNumber(keys).map { Int($0) }
+    }
+
+    /// Finds the first numeric value for any of the given keys, searching nested
+    /// containers as a fallback. Useful for loosely-shaped dashboard payloads.
+    func firstDouble(_ keys: String...) -> Double? {
+        firstNumber(keys)
+    }
+
+    /// Finds a numeric value in entries shaped like `{ label: "电影", value: 123 }`.
+    func firstInt(labeled labels: String...) -> Int? {
+        firstLabeledNumber(labels).map { Int($0) }
+    }
+
+    /// Finds a numeric value in entries shaped like `{ label: "CPU", percent: 12 }`.
+    func firstDouble(labeled labels: String...) -> Double? {
+        firstLabeledNumber(labels)
+    }
+
+    /// Returns a nested value for a fixed object path.
+    func value(at path: [String]) -> JSONValue? {
+        guard !path.isEmpty else { return self }
+        var current = self
+        for key in path {
+            let next = current[key]
+            guard !next.isNull else { return nil }
+            current = next
+        }
+        return current
+    }
+
+    private func firstNumber(_ keys: [String]) -> Double? {
+        let wanted = Set(keys.map(Self.normalizedKey))
+        return firstNumber(matching: wanted)
+    }
+
+    private func firstLabeledNumber(_ labels: [String]) -> Double? {
+        let wanted = Set(labels.map(Self.normalizedKey))
+        return firstLabeledNumber(matching: wanted)
+    }
+
+    private func firstNumber(matching wanted: Set<String>) -> Double? {
+        guard !wanted.isEmpty else { return nil }
+        switch self {
+        case .object(let dict):
+            for (key, value) in dict where wanted.contains(Self.normalizedKey(key)) {
+                if let number = value.numberForMatchedContainer() { return number }
+            }
+            for value in dict.values {
+                if let number = value.firstNumber(matching: wanted) { return number }
+            }
+            return nil
+        case .array(let array):
+            for value in array {
+                if let number = value.firstNumber(matching: wanted) { return number }
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private func firstLabeledNumber(matching wanted: Set<String>) -> Double? {
+        guard !wanted.isEmpty else { return nil }
+        switch self {
+        case .object(let dict):
+            if let label = firstString("label", "title", "name", "key", "type", "metric"),
+               Self.label(label, matches: wanted) {
+                let valueKeys = ["value", "count", "total", "num", "number", "amount", "percent", "percentage", "usage", "used"]
+                for key in valueKeys {
+                    let normalized = Self.normalizedKey(key)
+                    for (rawKey, value) in dict where Self.normalizedKey(rawKey) == normalized {
+                        if let number = value.numberForMatchedContainer() { return number }
+                    }
+                }
+                for value in dict.values {
+                    if let number = value.numberForMatchedContainer() { return number }
+                }
+            }
+            for value in dict.values {
+                if let number = value.firstLabeledNumber(matching: wanted) { return number }
+            }
+            return nil
+        case .array(let array):
+            for value in array {
+                if let number = value.firstLabeledNumber(matching: wanted) { return number }
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private func numberForMatchedContainer() -> Double? {
+        switch self {
+        case .number(let n):
+            return n
+        case .string(let s):
+            return Double(s.trimmingCharacters(in: CharacterSet(charactersIn: "% ")))
+        case .bool(let b):
+            return b ? 1 : 0
+        case .array(let a):
+            return Double(a.count)
+        case .object(let dict):
+            let countKeys = ["count", "total", "value", "percent", "percentage", "usage", "usage_percent", "used_percent"]
+            for key in countKeys {
+                let wanted = Self.normalizedKey(key)
+                for (rawKey, value) in dict where Self.normalizedKey(rawKey) == wanted {
+                    if let number = value.numberForMatchedContainer() { return number }
+                }
+            }
+            return nil
+        case .null:
+            return nil
+        }
+    }
+
+    private static func normalizedKey(_ key: String) -> String {
+        key.lowercased()
+            .replacingOccurrences(of: "_", with: "")
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: " ", with: "")
+    }
+
+    private static func label(_ label: String, matches wanted: Set<String>) -> Bool {
+        let normalized = normalizedKey(label)
+        return wanted.contains(where: { normalized.contains($0) || $0.contains(normalized) })
+    }
 }
 
 extension JSONValue {

@@ -8,10 +8,42 @@ struct DashboardStats {
     var raw: JSONValue
     init(_ json: JSONValue) { self.raw = json }
 
-    var movieCount: Int? { raw["movie_count"].int ?? raw["movies"].int ?? raw["movie"].int }
-    var tvCount: Int? { raw["tv_count"].int ?? raw["series_count"].int ?? raw["tv"].int ?? raw["series"].int }
-    var episodeCount: Int? { raw["episode_count"].int ?? raw["episodes"].int }
-    var subscriptionCount: Int? { raw["subscription_count"].int ?? raw["subscriptions"].int }
+    var movieCount: Int? {
+        raw.firstInt(
+            "movie_count", "movieCount", "movies_count", "moviesCount",
+            "movie_total", "movieTotal", "movies_total", "moviesTotal",
+            "movie", "movies", "film_count", "filmCount"
+        )
+        ?? raw.firstInt(labeled: "电影", "影片", "movie", "movies", "film")
+    }
+
+    var tvCount: Int? {
+        raw.firstInt(
+            "tv_count", "tvCount", "series_count", "seriesCount",
+            "show_count", "showCount", "shows_count", "showsCount",
+            "tv_total", "series_total", "tv", "series", "shows"
+        )
+        ?? raw.firstInt(labeled: "剧集", "电视剧", "tv", "series", "shows")
+    }
+
+    var episodeCount: Int? {
+        raw.firstInt(
+            "episode_count", "episodeCount", "episodes_count", "episodesCount",
+            "episode_total", "episodeTotal", "episodes_total", "episodesTotal",
+            "episode", "episodes", "episode_file_count", "episodeFileCount"
+        )
+        ?? raw.firstInt(labeled: "剧集集数", "集数", "分集", "episode", "episodes")
+    }
+
+    var subscriptionCount: Int? {
+        raw.firstInt(
+            "subscription_count", "subscriptionCount", "subscriptions_count", "subscriptionsCount",
+            "subscription_total", "subscriptionTotal", "subscriptions_total", "subscriptionsTotal",
+            "subscription", "subscriptions", "rss_count", "rssCount", "rss_sources", "rssSources",
+            "moviepilot_subscriptions", "moviepilotSubscriptions"
+        )
+        ?? raw.firstInt(labeled: "订阅", "订阅源", "subscription", "subscriptions", "rss")
+    }
 
     /// Generic numeric metrics for a flexible grid, when specific keys are absent.
     var metrics: [(key: String, value: String)] {
@@ -35,10 +67,32 @@ struct DeviceMetrics {
     var raw: JSONValue
     init(_ json: JSONValue) { self.raw = json }
 
-    var cpuPercent: Double? { raw["cpu"].double ?? raw["cpu_percent"].double ?? raw["cpu_usage"].double }
-    var memoryPercent: Double? { raw["memory"].double ?? raw["memory_percent"].double ?? raw["mem_percent"].double
-        ?? raw["memory"]["percent"].double }
-    var diskPercent: Double? { raw["disk"].double ?? raw["disk_percent"].double ?? raw["disk"]["percent"].double }
+    var cpuPercent: Double? {
+        raw.firstDouble(
+            "cpu", "cpu_percent", "cpuPercent", "cpu_usage", "cpuUsage",
+            "cpu_usage_percent", "cpuUsagePercent", "cpu_used_percent", "cpuUsedPercent",
+            "processor", "processor_percent", "processorPercent"
+        )
+        ?? raw.firstDouble(labeled: "CPU", "processor")
+    }
+
+    var memoryPercent: Double? {
+        raw.firstDouble(
+            "memory", "memory_percent", "memoryPercent", "memory_usage", "memoryUsage",
+            "memory_usage_percent", "memoryUsagePercent", "mem_percent", "memPercent",
+            "mem_usage", "memUsage", "ram", "ram_percent", "ramPercent"
+        )
+        ?? raw.firstDouble(labeled: "内存", "memory", "mem", "ram")
+    }
+
+    var diskPercent: Double? {
+        raw.firstDouble(
+            "disk", "disk_percent", "diskPercent", "disk_usage", "diskUsage",
+            "disk_usage_percent", "diskUsagePercent", "storage", "storage_percent",
+            "storagePercent", "storage_usage", "storageUsage"
+        )
+        ?? raw.firstDouble(labeled: "磁盘", "硬盘", "disk", "storage")
+    }
 }
 
 // MARK: - Subscriptions (RSS sources)
